@@ -1,3 +1,5 @@
+import re
+
 from aiogram import Router, F
 from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
@@ -7,8 +9,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from API_SCRIPTS.Facebook_api import check_adacc
 from Bot import dialogs
 from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, create_token_list_keyboard, \
-    create_adacc_settings_keyboard
-from Bot.utils.States import WhiteList, TokenList, AdaccountsList
+    create_adacc_settings_keyboard, create_schedulers_keyboard, create_schedulers_add_keyboard
+from Bot.utils.States import WhiteList, TokenList, AdaccountsList, SchedulerList
+from Bot.utils.scheduler import add_job
 from Database.database import db
 
 admin_router = Router()
@@ -93,7 +96,7 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
     token = db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=token_id, fetch='fetchone')[0]
 
     await state.update_data(token_id=token_id)
-    token_accounts = list(db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s",
+    token_accounts = list(db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
                                    values=(token,), fetch='fetchall'))
     text = ''
     count = 1
@@ -177,7 +180,7 @@ async def acc_press_btn(call: CallbackQuery, state: FSMContext):
         token = \
             db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=token_id['token_id'], fetch='fetchone')[0]
 
-        token_accounts = list(db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s",
+        token_accounts = list(db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
                                        values=(token,), fetch='fetchall'))
         text = ''
         count = 1
@@ -625,3 +628,51 @@ async def white_choose(call: CallbackQuery, state: FSMContext):
         keyboard = create_white_list_keyboard()
         await call.message.edit_text(dialogs.RU_ru['white_list'], reply_markup=keyboard)
         await state.set_state(WhiteList.user)
+
+
+@admin_router.message(Command('scheduler'))
+async def scheduler_command(message: Message, state: FSMContext):
+    keyboard = create_schedulers_keyboard()
+    if keyboard is not None:
+        button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['add'], callback_data='scheduler_add')
+        button_markup = InlineKeyboardMarkup(inline_keyboard=[
+            [button]
+        ])
+        await message.answer(dialogs.RU_ru['scheduler']['None'], reply_markup=button_markup)
+        await state.set_state(SchedulerList.add)
+    else:
+        await message.answer(dialogs.RU_ru['scheduler']['notNone'], reply_markup=keyboard)
+        await state.set_state(SchedulerList.task)
+
+
+@admin_router.callback_query(F.data, SchedulerList.add)
+async def scheduler_add(call: CallbackQuery, state: FSMContext):
+    keyboard = create_schedulers_add_keyboard()
+    await call.message.edit_text(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
+    await state.set_state(SchedulerList.add_st2)
+
+
+@admin_router.callback_query(F.data, SchedulerList.add_st2)
+async def scheduler_add_st2(call: CallbackQuery, state: FSMContext):
+    data = call.data
+    button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='back')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
+    await state.update_data(choose=data)
+
+    if data == 'all':
+        await call.message.edit_text(text=dialogs.RU_ru['scheduler']['all_text'], reply_markup=keyboard)
+        await state.set_state(SchedulerList.add_st3)
+    else:
+        pass
+
+
+@admin_router.message(SchedulerList.add_st3)
+async def scheduler_add_st3(message: Message, state: FSMContext):
+    date_list = list(i for i in re.split(r'\d+\.', message.text))
+    date_list = [x.strip() for x in date_list if x.strip()]
+    data = await state.get_data()
+    if data['choose'] == 'all':
+        await message.answer(text=f'{dialogs.RU_ru['scheduler']['all_text_done']}{message.text}')
+        await add_job(job_id=data['choose'], date_list=date_list)
+
+

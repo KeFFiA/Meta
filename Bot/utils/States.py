@@ -16,3 +16,10 @@ class AdaccountsList(StatesGroup):
     settings = State()
 
 
+class SchedulerList(StatesGroup):
+    add = State()
+    add_st2 = State()
+    add_st3 = State()
+    task = State()
+
+

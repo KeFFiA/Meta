@@ -3,7 +3,7 @@ from typing import Any
 import psycopg2
 
 from config import host, user, password, db_name, port
-from Bot.logging_settings import database_logger
+from Bot.utils.logging_settings import database_logger
 
 
 class Database:
@@ -15,12 +15,12 @@ class Database:
                                             user=user,
                                             password=password)
             self.cursor = self.connect.cursor()
-            # database_logger.debug('DataBase connection success')
-            # with self.connect.cursor() as cursor:
-            #     cursor.execute(
-            #         "SELECT version();"
-            #     )
-#                 database_logger.debug(f'Server version: {cursor.fetchone()[0]}')
+            database_logger.debug('DataBase connection...')
+            with self.connect.cursor() as cursor:
+                cursor.execute(
+                    "SELECT version();"
+                )
+                database_logger.debug(f'Server version: {cursor.fetchone()[0]}')
         except Exception as _ex:
             database_logger.critical(f'Can`t establish connection to DataBase with error: {_ex}')
 
@@ -191,9 +191,23 @@ create_reports_table_query = """
     );
     """
 
+create_scheduler_table = """CREATE TABLE IF NOT EXISTS scheduled_jobs (
+                    job_id VARCHAR(255) UNIQUE NOT NULL,
+                    hour INTEGER NOT NULL,
+                    minute INTEGER NOT NULL
+                );
+"""
 
-# db.query(query=create_users_table)
-# db.query(query=create_white_list_table)
-# db.query(query=create_tokens_table)
+create_jobs_table = """CREATE TABLE IF NOT EXISTS jobs (
+                    job_id VARCHAR(255) UNIQUE NOT NULL
+                );
+"""
+
+
+db.query(query=create_users_table)
+db.query(query=create_white_list_table)
+db.query(query=create_tokens_table)
 db.query(query=create_adaccounts_table)
-# db.query(query=create_reports_table_query)
+db.query(query=create_reports_table_query)
+db.query(query=create_scheduler_table)
+db.query(query=create_jobs_table)

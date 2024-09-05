@@ -55,7 +55,6 @@ async def fast_report(message: Message):
             break
         else:
             await asyncio.sleep(10)
-            await message.ac
             time_sleep -= 10
             if time_sleep == 5:
                 await message.answer('Файл не найден')

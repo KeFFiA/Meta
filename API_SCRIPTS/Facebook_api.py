@@ -3,19 +3,19 @@ import datetime
 import json
 import os.path
 import shutil
+import ssl
 from decimal import Decimal
 import glob
 
+import certifi
 import requests
 from aiohttp import ClientSession
 
 from Database.database import db
 
 
-
-
-
 def check_adacc(token):
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
     url = ('https://graph.facebook.com/v20.0/me?'
            'fields=adaccounts{name, id}'
            f'&access_token={token}')
@@ -38,7 +38,7 @@ def check_adacc(token):
         return 'BAD'
 
 
-async def reports_which_is_active(user_id):
+async def reports_which_is_active(user_id='reserved'):
     adacc_ids = db.query(query="SELECT acc_id, api_token, date_preset, increment, level FROM adaccounts "
                                "WHERE is_active = TRUE",
                          fetch='fetchall')
@@ -129,10 +129,9 @@ async def reports_which_is_active(user_id):
         while True:
             async with ClientSession() as client:
                 async with client.get(url=url, params=params) as response:
-                    response.raise_for_status()  # Проверка на наличие ошибок
+                    response.raise_for_status()
                     data = await response.json()
 
-                    # Вставляем полученные данные в базу данных
                     try:
                         file_pattern = f'../API_SCRIPTS/temp/{user_id}/report_{datetime.datetime.today().strftime('%Y-%m-%d')}_*.csv'
                         filename = os.path.abspath(
@@ -156,7 +155,7 @@ async def reports_which_is_active(user_id):
                                     record.get('adset_id', None),
                                     record.get('ad_name', None),
                                     record.get('ad_id', None),
-                                    float(record.get('impressions', 0)),  # Преобразование в float
+                                    float(record.get('impressions', 0)),
                                     float(record.get('frequency', 0)),
                                     float(record.get('clicks', 0)),
                                     float(record.get('unique_clicks', 0)),
@@ -176,183 +175,78 @@ async def reports_which_is_active(user_id):
                                     record.get('date_stop', None),
                                 )
                             )
-
-                        with open(filename, mode='a', newline='', encoding='utf-8') as csvfile:
-                            writer = csv.writer(csvfile)
-                            # Заголовки
-                            writer.writerow([
-                                'account_name', 'account_id', 'campaign_name', 'campaign_id',
-                                'adset_name', 'adset_id', 'ad_name', 'ad_id',
-                                'impressions', 'frequency', 'clicks', 'unique_clicks',
-                                'spend', 'reach', 'cpp', 'cpm',
-                                'unique_link_clicks_ctr', 'ctr', 'unique_ctr',
-                                'cpc', 'cost_per_unique_click', 'objective',
-                                'buying_type', 'created_time', 'date_start', 'date_stop'
-                            ])
-                            for record in data.get('data', []):
-                                # Преобразовать Decimal в float или str
+                        try:
+                            with open(filename, mode='a', newline='', encoding='utf-8') as csvfile:
+                                writer = csv.writer(csvfile)
+                                # Заголовки
                                 writer.writerow([
-                                    record.get('account_name', ''),
-                                    record.get('account_id', ''),
-                                    record.get('campaign_name', ''),
-                                    record.get('campaign_id', ''),
-                                    record.get('adset_name', ''),
-                                    record.get('adset_id', ''),
-                                    record.get('ad_name', ''),
-                                    record.get('ad_id', ''),
-                                    float(record.get('impressions', 0)),  # Преобразовать Decimal в float
-                                    float(record.get('frequency', 0)),
-                                    float(record.get('clicks', 0)),
-                                    float(record.get('unique_clicks', 0)),
-                                    float(record.get('spend', 0)),
-                                    float(record.get('reach', 0)),
-                                    float(record.get('cpp', 0)),
-                                    float(record.get('cpm', 0)),
-                                    float(record.get('unique_link_clicks_ctr', 0)),
-                                    float(record.get('ctr', 0)),
-                                    float(record.get('unique_ctr', 0)),
-                                    float(record.get('cpc', 0)),
-                                    float(record.get('cost_per_unique_click', 0)),
-                                    record.get('objective', ''),
-                                    record.get('buying_type', ''),
-                                    record.get('created_time', ''),
-                                    record.get('date_start', ''),
-                                    record.get('date_stop', ''),
+                                    'account_name', 'account_id', 'campaign_name', 'campaign_id',
+                                    'adset_name', 'adset_id', 'ad_name', 'ad_id',
+                                    'impressions', 'frequency', 'clicks', 'unique_clicks',
+                                    'spend', 'reach', 'cpp', 'cpm',
+                                    'unique_link_clicks_ctr', 'ctr', 'unique_ctr',
+                                    'cpc', 'cost_per_unique_click', 'objective',
+                                    'buying_type', 'created_time', 'date_start', 'date_stop'
                                 ])
+                                for record in data.get('data', []):
+                                    writer.writerow([
+                                        record.get('account_name', ''),
+                                        record.get('account_id', ''),
+                                        record.get('campaign_name', ''),
+                                        record.get('campaign_id', ''),
+                                        record.get('adset_name', ''),
+                                        record.get('adset_id', ''),
+                                        record.get('ad_name', ''),
+                                        record.get('ad_id', ''),
+                                        float(record.get('impressions', 0)),
+                                        float(record.get('frequency', 0)),
+                                        float(record.get('clicks', 0)),
+                                        float(record.get('unique_clicks', 0)),
+                                        float(record.get('spend', 0)),
+                                        float(record.get('reach', 0)),
+                                        float(record.get('cpp', 0)),
+                                        float(record.get('cpm', 0)),
+                                        float(record.get('unique_link_clicks_ctr', 0)),
+                                        float(record.get('ctr', 0)),
+                                        float(record.get('unique_ctr', 0)),
+                                        float(record.get('cpc', 0)),
+                                        float(record.get('cost_per_unique_click', 0)),
+                                        record.get('objective', ''),
+                                        record.get('buying_type', ''),
+                                        record.get('created_time', ''),
+                                        record.get('date_start', ''),
+                                        record.get('date_stop', ''),
+                                    ])
+                        except:
+                            pass
 
 
-                    except Exception as ex:
-                        print(ex)
-                    # Проверяем, есть ли следующая страница данных
+                    except:
+                        pass
                     if 'paging' in data and 'next' in data['paging']:
-                        url = data['paging']['next']  # Обновляем URL на следующий
-                        params = {}  # Параметры не нужны для следующей страницы
+                        url = data['paging']['next']
+                        params = {}
                     else:
                         item += 1
                         break
-    file_list = glob.glob(file_pattern)
-    with open(filename_2, 'w') as out:
-        for file_name in file_list:
-            with open(file_name, 'r') as infile:
-                out.write(infile.read())
-    shutil.rmtree(os.path.abspath(f'../API_SCRIPTS/temp/{user_id}'))
+
+    db.query(query="""DELETE FROM reports
+            WHERE ctid NOT IN (
+                SELECT MIN(ctid)
+                FROM reports
+                GROUP BY account_id, campaign_id, ad_id
+            );""")
+    try:
+        file_list = glob.glob(file_pattern)
+        with open(filename_2, 'w') as out:
+            for file_name in file_list:
+                with open(file_name, 'r') as infile:
+                    out.write(infile.read())
+        shutil.rmtree(os.path.abspath(f'../API_SCRIPTS/temp/{user_id}'))
+    except:
+        pass
 
 
-# async def fetch_data_which_active(campaign_ids, params_list):
-#     item = 0
-#
-#     for camp_id in campaign_ids:
-#         url = f'https://graph.facebook.com/v20.0/{camp_id}/insights'
-#         params = params_list[item]
-#
-#         while True:
-#             async with ClientSession() as client:
-#                 async with client.get(url=url, params=params) as response:
-#                     response.raise_for_status()  # Проверка на наличие ошибок
-#                     data = await response.json()
-#
-#                     # Вставляем полученные данные в базу данных
-#                     await insert_db_witch_active(data, item=item+1)
-#
-#                     # Проверяем, есть ли следующая страница данных
-#                     if 'paging' in data and 'next' in data['paging']:
-#                         url = data['paging']['next']  # Обновляем URL на следующий
-#                         params = {}  # Параметры не нужны для следующей страницы
-#                     else:
-#                         item += 1
-#                         break
-
-
-# async def insert_db_witch_active(data, item):
-    # try:
-    #     file_pattern = f'../API_SCRIPTS/temp/report_{datetime.datetime.today().strftime('%Y-%m-%d')}_*.csv'
-    #
-    #     filename = os.path.abspath(f'../API_SCRIPTS/temp/report_{datetime.datetime.today().strftime('%Y-%m-%d')}_{item}.csv')
-    #     filename_2 = os.path.abspath(f'../temp/report_{datetime.datetime.today().strftime('%Y-%m-%d')}.csv')
-    #     file_list = glob.glob(file_pattern)
-    #     for record in data.get('data', []):
-    #         db.query(
-    #             query="INSERT INTO reports (account_name, account_id, campaign_name, campaign_id, adset_name, "
-    #                   "adset_id, ad_name, ad_id, impressions, frequency, clicks, unique_clicks, spend, reach, cpp, "
-    #                   "cpm, unique_link_clicks_ctr, ctr, unique_ctr, cpc, cost_per_unique_click, objective, "
-    #                   "buying_type, created_time, date_start, date_stop) "
-    #                   "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
-    #                   "%s, %s, %s, %s, %s)",
-    #             values=(
-    #                 record.get('account_name', None),
-    #                 record.get('account_id', None),
-    #                 record.get('campaign_name', None),
-    #                 record.get('campaign_id', None),
-    #                 record.get('adset_name', None),
-    #                 record.get('adset_id', None),
-    #                 record.get('ad_name', None),
-    #                 record.get('ad_id', None),
-    #                 float(record.get('impressions', 0)),  # Преобразование в float
-    #                 float(record.get('frequency', 0)),
-    #                 float(record.get('clicks', 0)),
-    #                 float(record.get('unique_clicks', 0)),
-    #                 float(record.get('spend', 0)),
-    #                 float(record.get('reach', 0)),
-    #                 float(record.get('cpp', 0)),
-    #                 float(record.get('cpm', 0)),
-    #                 float(record.get('unique_link_clicks_ctr', 0)),
-    #                 float(record.get('ctr', 0)),
-    #                 float(record.get('unique_ctr', 0)),
-    #                 float(record.get('cpc', 0)),
-    #                 float(record.get('cost_per_unique_click', 0)),
-    #                 record.get('objective', None),
-    #                 record.get('buying_type', None),
-    #                 record.get('created_time', None),
-    #                 record.get('date_start', None),
-    #                 record.get('date_stop', None),
-    #             )
-    #         )
-    #
-    #     with open(filename, mode='a', newline='', encoding='utf-8') as csvfile:
-    #         writer = csv.writer(csvfile)
-    #         # Заголовки
-    #         writer.writerow([
-    #             'account_name', 'account_id', 'campaign_name', 'campaign_id',
-    #             'adset_name', 'adset_id', 'ad_name', 'ad_id',
-    #             'impressions', 'frequency', 'clicks', 'unique_clicks',
-    #             'spend', 'reach', 'cpp', 'cpm',
-    #             'unique_link_clicks_ctr', 'ctr', 'unique_ctr',
-    #             'cpc', 'cost_per_unique_click', 'objective',
-    #             'buying_type', 'created_time', 'date_start', 'date_stop'
-    #         ])
-    #         for record in data.get('data', []):
-    #             # Преобразовать Decimal в float или str
-    #             writer.writerow([
-    #                 record.get('account_name', ''),
-    #                 record.get('account_id', ''),
-    #                 record.get('campaign_name', ''),
-    #                 record.get('campaign_id', ''),
-    #                 record.get('adset_name', ''),
-    #                 record.get('adset_id', ''),
-    #                 record.get('ad_name', ''),
-    #                 record.get('ad_id', ''),
-    #                 float(record.get('impressions', 0)),  # Преобразовать Decimal в float
-    #                 float(record.get('frequency', 0)),
-    #                 float(record.get('clicks', 0)),
-    #                 float(record.get('unique_clicks', 0)),
-    #                 float(record.get('spend', 0)),
-    #                 float(record.get('reach', 0)),
-    #                 float(record.get('cpp', 0)),
-    #                 float(record.get('cpm', 0)),
-    #                 float(record.get('unique_link_clicks_ctr', 0)),
-    #                 float(record.get('ctr', 0)),
-    #                 float(record.get('unique_ctr', 0)),
-    #                 float(record.get('cpc', 0)),
-    #                 float(record.get('cost_per_unique_click', 0)),
-    #                 record.get('objective', ''),
-    #                 record.get('buying_type', ''),
-    #                 record.get('created_time', ''),
-    #                 record.get('date_start', ''),
-    #                 record.get('date_stop', ''),
-    #             ])
-    #
-    # except Exception as ex:
-    #     print(ex)
 
 
 

@@ -1,6 +1,4 @@
-from Bot.logging_settings import database_query_logger
 from .database import db
-from Bot.dialogs import RU_ru
 
 
 def white_list():
@@ -57,3 +55,8 @@ def token_list():
             step[f'token_{step_1[2]}'][keys[v]] = step_1[v]
 
     return step
+
+
+
+
+

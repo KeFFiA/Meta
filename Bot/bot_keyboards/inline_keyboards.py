@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from Bot import dialogs
+from Database.database import db
 from Database.database_query import white_list, token_list
 
 
@@ -85,9 +86,43 @@ def create_adacc_settings_keyboard():
     return builder.as_markup()
 
 
+def create_schedulers_keyboard():
+    tasks = db.query(query='SELECT job_id FROM jobs', fetch='fetchall')
+    if len(tasks) == 0:
+        return None
+    else:
+        builder = InlineKeyboardBuilder()
+        buttons = []
+        for button in tasks:
+            try:
+                buttons.append(InlineKeyboardButton(
+                    text=button,
+                    callback_data=button
+                ))
+            except:
+                pass
+
+        delete_all = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['delete_all'], callback_data='delete_all')
+        add = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['add'], callback_data='add')
+        back = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='back')
+
+        last_btns = InlineKeyboardMarkup(inline_keyboard=[
+            [add],
+            [delete_all],
+            [back]
+        ])
+        builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
+
+        return builder.as_markup()
 
 
-
-
+def create_schedulers_add_keyboard():
+    button_add = InlineKeyboardButton(text=dialogs.RU_ru['scheduler']['all'], callback_data='all')
+    button_back = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='back')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [button_add],
+        [button_back]
+    ])
+    return keyboard
 
 

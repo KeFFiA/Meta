@@ -50,6 +50,11 @@ LOGGING_CONFIG = {
             'propagate': True,
             'level': 'DEBUG'
         },
+        'SCHEDULER': {
+            'handlers': ['stream_handler', 'rotating_files_handler'],
+            'propagate': True,
+            'level': 'DEBUG'
+        }
     }
 }
 
@@ -59,3 +64,4 @@ bot_logger = logging.getLogger('BOT')
 database_logger = logging.getLogger('DATABASE')
 handlers_logger = logging.getLogger('HANDLERS')
 database_query_logger = logging.getLogger('DATABASE_QUERY')
+scheduler_logger = logging.getLogger('SCHEDULER')
