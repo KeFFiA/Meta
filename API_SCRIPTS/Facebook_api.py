@@ -14,8 +14,10 @@ from aiohttp import ClientSession
 from Database.database import db
 
 
+ssl_context = ssl.create_default_context(cafile=certifi.where())
+
+
 def check_adacc(token):
-    ssl_context = ssl.create_default_context(cafile=certifi.where())
     url = ('https://graph.facebook.com/v20.0/me?'
            'fields=adaccounts{name, id}'
            f'&access_token={token}')
@@ -101,7 +103,7 @@ async def reports_which_is_active(user_id='reserved'):
 
         while True:
             async with ClientSession() as client:
-                async with client.get(url=url_step_1, params=params_step_1) as response_step_1:
+                async with client.get(url=url_step_1, params=params_step_1, ssl=ssl_context) as response_step_1:
                     response_step_1.raise_for_status()
                     data_step_1 = await response_step_1.json()
 
@@ -128,7 +130,7 @@ async def reports_which_is_active(user_id='reserved'):
 
         while True:
             async with ClientSession() as client:
-                async with client.get(url=url, params=params) as response:
+                async with client.get(url=url, params=params, ssl=ssl_context) as response:
                     response.raise_for_status()
                     data = await response.json()
 
