@@ -1,5 +1,6 @@
 import logging.config
 import logging
+import os.path
 
 LOGGING_CONFIG = {
     'version': 1,
@@ -20,7 +21,7 @@ LOGGING_CONFIG = {
         'rotating_files_handler': {
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'default_formatter',
-            'filename': 'C:\\Users\\ogien\\PycharmProjects\\MarketBOT\\Logs\\log.log',
+            'filename': os.path.abspath('./Logs/log.log'),
             'encoding': 'UTF-8',
             'maxBytes': 1000000,
             'backupCount': 3,
