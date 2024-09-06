@@ -45,7 +45,7 @@ async def fast_report(message: Message):
     file_path = os.path.abspath(f'../temp/{message.from_user.id}/report_{datetime.datetime.today().strftime("%Y-%m-%d")}.csv')
     await message.answer(dialogs.RU_ru['wait'])
     await reports_which_is_active(user_id=message.from_user.id)
-    time_sleep = 505
+    time_sleep = 305
     while time_sleep > 0:
         if os.path.exists(file_path):
             await message.delete()

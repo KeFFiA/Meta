@@ -236,7 +236,9 @@ async def reports_which_is_active(user_id='reserved'):
             WHERE ctid NOT IN (
                 SELECT MIN(ctid)
                 FROM reports
-                GROUP BY account_id, campaign_id, ad_id
+                GROUP BY account_name, account_id, campaign_name, campaign_id, adset_name, adset_id, ad_name, ad_id,
+                impressions, frequency, clicks, unique_clicks, spend, reach, cpp, cpm, unique_link_clicks_ctr, ctr,
+                unique_ctr, cpc, cost_per_unique_click, objective, buying_type, created_time, date_start, date_stop
             );""")
     try:
         file_list = glob.glob(file_pattern)
