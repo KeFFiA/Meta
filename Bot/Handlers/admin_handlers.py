@@ -11,7 +11,7 @@ from Bot import dialogs
 from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, create_token_list_keyboard, \
     create_adacc_settings_keyboard, create_schedulers_keyboard, create_schedulers_add_keyboard
 from Bot.utils.States import WhiteList, TokenList, AdaccountsList, SchedulerList
-from Bot.utils.scheduler import add_job
+from Bot.utils.scheduler import add_job, get_jobs
 from Database.database import db
 
 admin_router = Router()
@@ -37,7 +37,7 @@ async def add_user_cmd(message: Message, command: CommandObject):
     if db.query(query="INSERT INTO white_list (user_id) VALUES (%s)", values=(user_id[0],)) == 'Success':
         await message.answer(f'Пользователь {user_id[0]} добавлен!')
     else:
-        await message.answer('Пользователь уже добавлен')
+        await message.answer('Пользователь уже добавлен или неверно введен ID')
 
 
 @admin_router.message(Command("add_token"))
@@ -133,44 +133,46 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
 
 @admin_router.callback_query(F.data.startswith('act_'), AdaccountsList.acc)
 async def token_list_press_token(call: CallbackQuery, state: FSMContext):
-    if call.data == 'act_back_to_token':
+    choose = call.data
+    if choose == 'act_back_to_token':
         keyboard = create_token_list_keyboard()
         await call.message.edit_text(dialogs.RU_ru['tokens_list'], reply_markup=keyboard)
         await state.update_data(token_id=None, account=None)
         await state.set_state(TokenList.token)
-    account = call.data
-    await state.update_data(account=account)
-    data = list(db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE acc_id=%s",
-                         values=(account,), fetch='fetchone'))
-
-    inline_btn_reports_acc = InlineKeyboardButton(callback_data='acc_btn_reports',
-                                                  text=dialogs.RU_ru['navigation']['reports'])
-    inline_btn_activate_acc = InlineKeyboardButton(callback_data='acc_btn_activate',
-                                                   text=dialogs.RU_ru['navigation']['activate'])
-    inline_btn_deactivate_acc = InlineKeyboardButton(callback_data='acc_btn_deactivate',
-                                                     text=dialogs.RU_ru['navigation']['deactivate'])
-    inline_btn_back_acc = InlineKeyboardButton(callback_data='acc_btn_back_to_acc',
-                                               text=dialogs.RU_ru['navigation']['back'])
-
-    acc_name, acc_id, is_active = data
-    if is_active:
-        active = 'true'
-        inline_kb_acc = InlineKeyboardMarkup(inline_keyboard=[
-            [inline_btn_deactivate_acc], [inline_btn_reports_acc], [inline_btn_back_acc]
-        ])
     else:
-        active = 'false'
-        inline_kb_acc = InlineKeyboardMarkup(inline_keyboard=[
-            [inline_btn_activate_acc], [inline_btn_reports_acc], [inline_btn_back_acc]
-        ])
+        await state.update_data(account=choose)
 
-    await call.message.edit_text(text=f"""<b>{dialogs.RU_ru['adaccount']['name']} {acc_name}
+        data = list(db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE acc_id=%s",
+                             values=(choose,), fetch='fetchone'))
+
+        inline_btn_reports_acc = InlineKeyboardButton(callback_data='acc_btn_reports',
+                                                      text=dialogs.RU_ru['navigation']['reports'])
+        inline_btn_activate_acc = InlineKeyboardButton(callback_data='acc_btn_activate',
+                                                       text=dialogs.RU_ru['navigation']['activate'])
+        inline_btn_deactivate_acc = InlineKeyboardButton(callback_data='acc_btn_deactivate',
+                                                         text=dialogs.RU_ru['navigation']['deactivate'])
+        inline_btn_back_acc = InlineKeyboardButton(callback_data='acc_btn_back_to_acc',
+                                                   text=dialogs.RU_ru['navigation']['back'])
+
+        acc_name, acc_id, is_active = data
+        if is_active:
+            active = 'true'
+            inline_kb_acc = InlineKeyboardMarkup(inline_keyboard=[
+                [inline_btn_deactivate_acc], [inline_btn_reports_acc], [inline_btn_back_acc]
+            ])
+        else:
+            active = 'false'
+            inline_kb_acc = InlineKeyboardMarkup(inline_keyboard=[
+                [inline_btn_activate_acc], [inline_btn_reports_acc], [inline_btn_back_acc]
+            ])
+
+        await call.message.edit_text(text=f"""<b>{dialogs.RU_ru['adaccount']['name']} {acc_name}
 {dialogs.RU_ru['adaccount']['id']} {acc_id}</b>
 
 {dialogs.RU_ru['adaccount']['reports']} {dialogs.RU_ru['adaccount']['is_active'][active]}""",
-                                 reply_markup=inline_kb_acc)
-    await state.update_data(acc_id=acc_id, acc_name=acc_name)
-    await state.set_state(AdaccountsList.choose)
+                                     reply_markup=inline_kb_acc)
+        await state.update_data(acc_id=acc_id, acc_name=acc_name)
+        await state.set_state(AdaccountsList.choose)
 
 
 @admin_router.callback_query(F.data.startswith('acc_btn'), AdaccountsList.choose)
@@ -535,20 +537,23 @@ async def white_list_press_user(call: CallbackQuery, state: FSMContext):
                                                 text=dialogs.RU_ru['navigation']['back'])
     inline_btn_acc_user = InlineKeyboardButton(url=f'tg://user?id={user_id}',
                                                text=dialogs.RU_ru['navigation']['message'])
+    inline_btn_back_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
 
     if is_admin:
         admin = 'true'
         inline_kb_user = InlineKeyboardMarkup(inline_keyboard=[
             [inline_btn_acc_user],
             [inline_btn_downgrade_user, inline_btn_delete_user],
-            [inline_btn_back_user]
+            [inline_btn_back_user],
+            [inline_btn_back_menu]
         ])
     else:
         admin = 'false'
         inline_kb_user = InlineKeyboardMarkup(inline_keyboard=[
             [inline_btn_acc_user],
             [inline_btn_upgrade_user, inline_btn_delete_user],
-            [inline_btn_back_user]
+            [inline_btn_back_user],
+            [inline_btn_back_menu]
         ])
     await state.update_data(user_data=user_data, admin=admin)
     if user_data[1] is None:
@@ -577,6 +582,7 @@ async def white_choose(call: CallbackQuery, state: FSMContext):
                                                 text=dialogs.RU_ru['navigation']['back'])
     inline_btn_acc_user = InlineKeyboardButton(url=f'tg://user?id={data['user_id']}',
                                                text=dialogs.RU_ru['navigation']['message'])
+    inline_btn_back_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
 
     if choose == 'white_btn_delete_from_white_list':
         db.query(query="DELETE FROM white_list WHERE user_id=%s",
@@ -595,7 +601,8 @@ async def white_choose(call: CallbackQuery, state: FSMContext):
         inline_kb_user = InlineKeyboardMarkup(inline_keyboard=[
             [inline_btn_acc_user],
             [inline_btn_downgrade_user, inline_btn_delete_user],
-            [inline_btn_back_user]
+            [inline_btn_back_user],
+            [inline_btn_back_menu]
         ])
 
         await call.message.edit_text(text=f"""
@@ -613,7 +620,8 @@ async def white_choose(call: CallbackQuery, state: FSMContext):
         inline_kb_user = InlineKeyboardMarkup(inline_keyboard=[
             [inline_btn_acc_user],
             [inline_btn_upgrade_user, inline_btn_delete_user],
-            [inline_btn_back_user]
+            [inline_btn_back_user],
+            [inline_btn_back_menu]
         ])
 
         await call.message.edit_text(text=f"""
@@ -631,42 +639,51 @@ async def white_choose(call: CallbackQuery, state: FSMContext):
 
 
 @admin_router.message(Command('scheduler'))
-async def scheduler_command(message: Message, state: FSMContext):
-    keyboard = create_schedulers_keyboard()
-    if keyboard is not None:
-        button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['add'], callback_data='scheduler_add')
-        button_markup = InlineKeyboardMarkup(inline_keyboard=[
-            [button]
+async def scheduler_command(message: Message):
+    data = await get_jobs()
+    if not data:
+        button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['add'], callback_data='edit_scheduler')
+        main_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
+        keyboard_1 = InlineKeyboardMarkup(inline_keyboard=[
+            [button],
+            [main_menu]
         ])
-        await message.answer(dialogs.RU_ru['scheduler']['None'], reply_markup=button_markup)
-        await state.set_state(SchedulerList.add)
+        await message.answer(dialogs.RU_ru['scheduler']['None'], reply_markup=keyboard_1)
     else:
-        await message.answer(dialogs.RU_ru['scheduler']['notNone'], reply_markup=keyboard)
-        await state.set_state(SchedulerList.task)
+        keyboard = create_schedulers_keyboard()
+        text = ''
+        data = await get_jobs()
+        count = 1
+        for items in data:
+            job_ids, hour, minute = items
+            job_id = job_ids.removesuffix(f'_{count}')
+            text += f'{job_id} - {hour}:{minute}\n\n'
+            count += 1
+
+        await message.answer(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
 
 
-@admin_router.callback_query(F.data, SchedulerList.add)
-async def scheduler_add(call: CallbackQuery, state: FSMContext):
+@admin_router.callback_query(F.data == 'edit_scheduler')
+async def scheduler_add(call: CallbackQuery):
     keyboard = create_schedulers_add_keyboard()
     await call.message.edit_text(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
-    await state.set_state(SchedulerList.add_st2)
 
 
-@admin_router.callback_query(F.data, SchedulerList.add_st2)
+@admin_router.callback_query(F.data == 'all')
 async def scheduler_add_st2(call: CallbackQuery, state: FSMContext):
     data = call.data
-    button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='back')
+    button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='scheduler_back_all')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
     await state.update_data(choose=data)
 
     if data == 'all':
-        await call.message.edit_text(text=dialogs.RU_ru['scheduler']['all_text'], reply_markup=keyboard)
-        await state.set_state(SchedulerList.add_st3)
+        await call.message.edit_text(text=dialogs.RU_ru['scheduler']['all_text'], reply_markup=keyboard,
+                                     parse_mode='HTML')
     else:
         pass
 
 
-@admin_router.message(SchedulerList.add_st3)
+@admin_router.message(F.text.startswith('1. '))
 async def scheduler_add_st3(message: Message, state: FSMContext):
     date_list = list(i for i in re.split(r'\d+\.', message.text))
     date_list = [x.strip() for x in date_list if x.strip()]
@@ -674,5 +691,92 @@ async def scheduler_add_st3(message: Message, state: FSMContext):
     if data['choose'] == 'all':
         await message.answer(text=f'{dialogs.RU_ru['scheduler']['all_text_done']}{message.text}')
         await add_job(job_id=data['choose'], date_list=date_list)
+        keyboard = create_schedulers_keyboard()
+        text = ''
+        data = await get_jobs()
+        count = 1
+        for items in data:
+            job_ids, hour, minute = items
+            job_id = job_ids.removesuffix(f'_{count}')
+            text += f'{job_id} - {hour}:{minute}\n\n'
+            count += 1
+
+        await message.answer(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
+
+    await state.clear()
 
 
+@admin_router.callback_query(F.data == 'tokens')
+async def tokens_call(call: CallbackQuery, state: FSMContext):
+    keyboard = create_token_list_keyboard()
+    await call.message.edit_text(dialogs.RU_ru['tokens_list'], reply_markup=keyboard)
+    await state.set_state(TokenList.token)
+
+
+@admin_router.callback_query(F.data == 'scheduler')
+async def scheduler_call(call: CallbackQuery):
+    data = await get_jobs()
+    if not data:
+        button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['add'], callback_data='edit_scheduler')
+        main_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
+        button_markup = InlineKeyboardMarkup(inline_keyboard=[
+            [button],
+            [main_menu]
+        ])
+        await call.message.edit_text(dialogs.RU_ru['scheduler']['None'], reply_markup=button_markup)
+    else:
+        keyboard = create_schedulers_keyboard()
+        text = ''
+        data = await get_jobs()
+        count = 1
+        for items in data:
+            job_ids, hour, minute = items
+            job_id = job_ids.removesuffix(f'_{count}')
+            text += f'{job_id} - {hour}:{minute}\n\n'
+            count += 1
+
+        await call.message.edit_text(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
+
+
+@admin_router.callback_query(F.data == 'delete_scheduler')
+async def delete_scheduler_call(call: CallbackQuery):
+    db.query(query="DELETE FROM scheduled_jobs")
+    button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['add'], callback_data='edit_scheduler')
+    main_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
+    button_markup = InlineKeyboardMarkup(inline_keyboard=[
+        [button],
+        [main_menu]
+    ])
+    await call.message.edit_text(dialogs.RU_ru['scheduler']['None'], reply_markup=button_markup)
+
+
+@admin_router.callback_query(F.data == 'scheduler_back')
+async def scheduler_back_call(call: CallbackQuery):
+    data = await get_jobs()
+    if not data:
+        button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['add'], callback_data='edit_scheduler')
+        main_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
+        button_markup = InlineKeyboardMarkup(inline_keyboard=[
+            [button],
+            [main_menu]
+        ])
+        await call.message.edit_text(dialogs.RU_ru['scheduler']['None'], reply_markup=button_markup)
+    else:
+        keyboard = create_schedulers_keyboard()
+        text = ''
+        data = await get_jobs()
+        count = 1
+        for items in data:
+            job_ids, hour, minute = items
+            job_id = job_ids.removesuffix(f'_{count}')
+            text += f'{job_id} - {hour}:{minute}\n\n'
+            count += 1
+
+        await call.message.edit_text(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
+
+
+@admin_router.callback_query(F.data == 'scheduler_back_all')
+async def scheduler_back_1_call(call: CallbackQuery, state: FSMContext):
+    await state.clear()
+    keyboard = create_schedulers_add_keyboard()
+    await call.message.edit_text(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)

@@ -22,7 +22,8 @@ def create_white_list_keyboard():
     builder.row(*buttons, width=1)
     last_btn_1 = InlineKeyboardButton(callback_data='next_page', text='-->')
     last_btn_2 = InlineKeyboardButton(callback_data='last_page', text='<--')
-    last_btns = InlineKeyboardMarkup(inline_keyboard=[[last_btn_2, last_btn_1]])
+    last_btn_3 = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
+    last_btns = InlineKeyboardMarkup(inline_keyboard=[[last_btn_2, last_btn_1], [last_btn_3]])
     builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
     return builder.as_markup()
 
@@ -34,7 +35,7 @@ def create_token_list_keyboard():
     for data, text in button.items():
         try:
             buttons.append(InlineKeyboardButton(
-                text=f"[{text['service']}]  "+text['token'][:25],
+                text=f"[{text['service']}]  " + text['token'][:25],
                 callback_data=data
             ))
         except:
@@ -43,8 +44,9 @@ def create_token_list_keyboard():
     builder.row(*buttons, width=1)
     last_btn_1 = InlineKeyboardButton(callback_data='next_page', text='-->')
     last_btn_2 = InlineKeyboardButton(callback_data='last_page', text='<--')
-    last_btns = InlineKeyboardMarkup(inline_keyboard=[[last_btn_2, last_btn_1]])
-    # builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
+    last_btn_3 = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
+    last_btns = InlineKeyboardMarkup(inline_keyboard=[[last_btn_2, last_btn_1], [last_btn_3]])
+    builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
     return builder.as_markup()
 
 
@@ -76,10 +78,12 @@ def create_adacc_settings_keyboard():
                                       text=dialogs.RU_ru['navigation']['date_preset'])
     increment_btn = InlineKeyboardButton(callback_data='increment',
                                          text=dialogs.RU_ru['navigation']['increment'])
+    main_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
 
     last_btns = InlineKeyboardMarkup(inline_keyboard=[
         [preset_btn, level_btn, increment_btn],
-        [activate_all_btn, back_btn, deactivate_all_btn]
+        [activate_all_btn, back_btn, deactivate_all_btn],
+        [main_menu]
     ])
     builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
 
@@ -87,42 +91,89 @@ def create_adacc_settings_keyboard():
 
 
 def create_schedulers_keyboard():
-    tasks = db.query(query='SELECT job_id FROM jobs', fetch='fetchall')
-    if len(tasks) == 0:
-        return None
-    else:
-        builder = InlineKeyboardBuilder()
-        buttons = []
-        for button in tasks:
-            try:
-                buttons.append(InlineKeyboardButton(
-                    text=button,
-                    callback_data=button
-                ))
-            except:
-                pass
+    delete = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['delete'],
+                                  callback_data='delete_scheduler')
+    edit = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['edit_scheduler'], callback_data='edit_scheduler')
+    back_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
 
-        delete_all = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['delete_all'], callback_data='delete_all')
-        add = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['add'], callback_data='add')
-        back = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='back')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [edit],
+        [delete],
+        [back_menu]
+    ])
 
-        last_btns = InlineKeyboardMarkup(inline_keyboard=[
-            [add],
-            [delete_all],
-            [back]
-        ])
-        builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
-
-        return builder.as_markup()
+    return keyboard
 
 
 def create_schedulers_add_keyboard():
     button_add = InlineKeyboardButton(text=dialogs.RU_ru['scheduler']['all'], callback_data='all')
-    button_back = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='back')
+    back_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='scheduler_back')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [button_add],
-        [button_back]
+        [back_menu]
     ])
     return keyboard
 
+
+def create_menu_keyboard():
+    white_list_btn = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['white_list'], callback_data='white_list')
+    tokens = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['token'], callback_data='tokens')
+    scheduler = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['scheduler'], callback_data='scheduler')
+    fast_report = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['fast_report'], callback_data='fast_report')
+    helper = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['help'], callback_data='help')
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [white_list_btn],
+        [tokens],
+        [scheduler],
+        [fast_report],
+        [helper]
+    ])
+
+    return keyboard
+
+
+def create_help_menu_keyboard():
+    white_list_btn = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['white_list'],
+                                          callback_data='white_list_help')
+    tokens = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['token'], callback_data='tokens_help')
+    scheduler = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['scheduler'], callback_data='scheduler_help')
+    fast_report = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['fast_report'],
+                                       callback_data='fast_report_help')
+    back_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [white_list_btn],
+        [tokens],
+        [scheduler],
+        [fast_report],
+        [back_menu]
+    ])
+
+    return keyboard
+
+
+def create_help_menu_white_list_keyboard():
+    add_user_btn = InlineKeyboardButton(text=dialogs.RU_ru['help_cmd']['add_user_btn'],
+                                        callback_data='add_user_help')
+    white_list_btn = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['white_list'],
+                                          callback_data='white_list_2_help')
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [white_list_btn],
+        [add_user_btn]
+    ])
+
+    return keyboard
+
+
+def create_help_menu_tokens_keyboard():
+    tokens = InlineKeyboardButton(text=dialogs.RU_ru['help_cmd']['tokens_btn'], callback_data='tokens_2_help')
+    add_token = InlineKeyboardButton(text=dialogs.RU_ru['help_cmd']['add_tokens_btn'], callback_data='add_token_help')
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [tokens],
+        [add_token]
+    ])
+
+    return keyboard
 

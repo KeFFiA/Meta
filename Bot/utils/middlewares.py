@@ -53,5 +53,5 @@ class CheckInAdminListMiddleware(BaseMiddleware):
             return await event.answer(
                 dialogs.RU_ru['not_admin'] +
                 f'\n\n<i>Ваш ID: <code>{user_id}</code></i>',
-                parse_mode='HTML'
+                parse_mode='HTML', show_alert=False
             )

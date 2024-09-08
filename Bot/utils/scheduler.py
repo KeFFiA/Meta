@@ -23,7 +23,6 @@ async def add_job(job_id, date_list):
     for date in date_list:
         time = date.split(':')
         hour, minute = time
-        print(hour, minute)
         job = f'{job_id}_{count}'
         db.query(query="INSERT INTO scheduled_jobs (job_id, hour, minute) VALUES (%s, %s, %s) "
                        "ON CONFLICT (job_id) DO UPDATE SET hour = EXCLUDED.hour, minute = EXCLUDED.minute",

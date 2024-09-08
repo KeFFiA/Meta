@@ -89,7 +89,7 @@ class Database:
             self.connect.commit()
             return 'Success'
         except Exception as _ex:
-            database_logger.log(msg=_ex, level=log_level)
+            database_logger.log(msg=msg, level=log_level)
             self.cursor.execute('ROLLBACK TO point1')
             return 'Error'
 
@@ -198,11 +198,6 @@ create_scheduler_table = """CREATE TABLE IF NOT EXISTS scheduled_jobs (
                 );
 """
 
-create_jobs_table = """CREATE TABLE IF NOT EXISTS jobs (
-                    job_id VARCHAR(255) UNIQUE NOT NULL
-                );
-"""
-
 
 db.query(query=create_users_table)
 db.query(query=create_white_list_table)
@@ -210,4 +205,3 @@ db.query(query=create_tokens_table)
 db.query(query=create_adaccounts_table)
 db.query(query=create_reports_table_query)
 db.query(query=create_scheduler_table)
-db.query(query=create_jobs_table)
