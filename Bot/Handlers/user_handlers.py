@@ -9,7 +9,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
 
-from API_SCRIPTS.Facebook_api import reports_which_is_active
+from API_SCRIPTS.Facebook_API import reports_which_is_active
 from Bot import dialogs
 from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, create_menu_keyboard, \
     create_help_menu_keyboard, create_help_menu_white_list_keyboard, create_help_menu_tokens_keyboard

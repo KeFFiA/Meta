@@ -17,7 +17,7 @@ from Database.database import db
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 
 
-def check_adacc(token):
+def check_adacc_facebook(token):
     url = ('https://graph.facebook.com/v20.0/me?'
            'fields=adaccounts{name, id}'
            f'&access_token={token}')

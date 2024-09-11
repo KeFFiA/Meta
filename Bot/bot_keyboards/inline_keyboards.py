@@ -1,3 +1,6 @@
+import json
+import os
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -106,10 +109,13 @@ def create_schedulers_keyboard():
 
 
 def create_schedulers_add_keyboard():
-    button_add = InlineKeyboardButton(text=dialogs.RU_ru['scheduler']['all'], callback_data='all')
+    button_add_all = InlineKeyboardButton(text=dialogs.RU_ru['scheduler']['all'], callback_data='scheduler_edit_facebook')
+    button_add_eWebinar = InlineKeyboardButton(text=dialogs.RU_ru['scheduler']['ewebinar'],
+                                               callback_data='scheduler_edit_ewebinar')
     back_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='scheduler_back')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [button_add],
+        [button_add_all],
+        [button_add_eWebinar],
         [back_menu]
     ])
     return keyboard
@@ -176,4 +182,53 @@ def create_help_menu_tokens_keyboard():
     ])
 
     return keyboard
+
+
+def create_scheduler_count_keyboard(count, data):
+    temp_dir = os.path.abspath(f'./temp/')
+    file_name = os.path.join(temp_dir, f'{data}_scheduler.json')
+    try:
+        with open(file_name, 'r') as file:
+            try:
+                file_data = json.load(file)
+            except json.JSONDecodeError:
+                file_data = []
+    except FileNotFoundError:
+        file_data = []
+
+    builder = InlineKeyboardBuilder()
+    buttons = []
+
+    for i in range(count+1):
+        if i == 0:
+            pass
+        else:
+            button_text = str(i)
+            for item in file_data:
+                if f'{data}_scheduler_{i}' in item:
+                    button_text = item[f'{data}_scheduler_{i}']
+                    break
+
+            buttons.append(InlineKeyboardButton(
+                text=button_text,
+                callback_data=f'scheduler_{i}'
+            ))
+
+
+    builder.row(*buttons, width=2)
+
+    done_btn = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['done'], callback_data='done')
+    back_btn = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data=f'scheduler1_back')
+    add_btn = InlineKeyboardButton(text='➕', callback_data=f'{data}_add')
+    del_btn = InlineKeyboardButton(text='➖', callback_data=f'{data}_del')
+
+    last_btns = InlineKeyboardMarkup(inline_keyboard=[
+        [done_btn],
+        [add_btn, del_btn],
+        [back_btn]
+    ])
+
+    builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
+
+    return builder.as_markup()
 

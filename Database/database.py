@@ -193,10 +193,50 @@ create_reports_table_query = """
 
 create_scheduler_table = """CREATE TABLE IF NOT EXISTS scheduled_jobs (
                     job_id VARCHAR(255) UNIQUE NOT NULL,
-                    hour INTEGER NOT NULL,
-                    minute INTEGER NOT NULL
+                    time VARCHAR
                 );
 """
+
+create_ewebinar_table = '''
+    CREATE TABLE IF NOT EXISTS ewebinar (
+        id VARCHAR PRIMARY KEY,
+        firstName VARCHAR,
+        lastName VARCHAR,
+        name VARCHAR,
+        email VARCHAR,
+        subscribed VARCHAR,
+        registrationLink VARCHAR,
+        replayLink VARCHAR,
+        joinLink VARCHAR,
+        addToCalendarLink VARCHAR,
+        timezone VARCHAR,
+        sessionType VARCHAR,
+        registeredTime TIMESTAMPTZ,
+        sessionTime VARCHAR,
+        joinedTime TIMESTAMPTZ,
+        leftTime TIMESTAMPTZ,
+        attended VARCHAR,
+        likes INTEGER,
+        watchedPercent DECIMAL,
+        watchedScheduledPercent DECIMAL,
+        watchedReplayPercent DECIMAL,
+        purchaseAmount DECIMAL,
+        converted BOOLEAN,
+        tags TEXT[],  -- массив строк
+        source VARCHAR,
+        referrer VARCHAR,
+        origin VARCHAR,
+        utm_source VARCHAR,
+        utm_medium VARCHAR,
+        utm_campaign VARCHAR,
+        utm_term VARCHAR,
+        utm_content VARCHAR,
+        gclid VARCHAR,
+        ip VARCHAR,
+        city VARCHAR,
+        country VARCHAR
+    );
+    '''
 
 
 db.query(query=create_users_table)
@@ -205,3 +245,4 @@ db.query(query=create_tokens_table)
 db.query(query=create_adaccounts_table)
 db.query(query=create_reports_table_query)
 db.query(query=create_scheduler_table)
+db.query(query=create_ewebinar_table)

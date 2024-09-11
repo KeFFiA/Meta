@@ -1,4 +1,6 @@
-import re
+import json
+import os
+from asyncio import sleep
 
 from aiogram import Router, F
 from aiogram.filters import Command, CommandObject
@@ -6,13 +8,16 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from API_SCRIPTS.Facebook_api import check_adacc
+from API_SCRIPTS.Facebook_API import check_adacc_facebook
+from API_SCRIPTS.eWebinar_API import check_acc_ewebinar
 from Bot import dialogs
 from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, create_token_list_keyboard, \
-    create_adacc_settings_keyboard, create_schedulers_keyboard, create_schedulers_add_keyboard
+    create_adacc_settings_keyboard, create_schedulers_keyboard, create_schedulers_add_keyboard, \
+    create_scheduler_count_keyboard, create_menu_keyboard
 from Bot.utils.States import WhiteList, TokenList, AdaccountsList, SchedulerList
 from Bot.utils.scheduler import add_job, get_jobs
 from Database.database import db
+from utils.logging_settings import admin_handlers_logger
 
 admin_router = Router()
 
@@ -52,7 +57,13 @@ async def add_token_cmd(message: Message, command: CommandObject):
     try:
         try:
             service, token = command.args.split(" ", maxsplit=1)
-            res = check_adacc(token)
+            if service.lower() == "facebook":
+                res = check_adacc_facebook(token)
+            elif service.lower() == "getcourse":
+                res = ''
+            elif service.lower() == "ewebinar":
+                res = await check_acc_ewebinar(token)
+
             if res == 200:
                 if db.query(query="INSERT INTO tokens (api_token, service) VALUES (%s, %s)",
                             values=(token, service)) == 'Success':
@@ -96,8 +107,9 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
     token = db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=token_id, fetch='fetchone')[0]
 
     await state.update_data(token_id=token_id)
-    token_accounts = list(db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
-                                   values=(token,), fetch='fetchall'))
+    token_accounts = list(
+        db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
+                 values=(token,), fetch='fetchall'))
     text = ''
     count = 1
     builder = InlineKeyboardBuilder()
@@ -182,8 +194,9 @@ async def acc_press_btn(call: CallbackQuery, state: FSMContext):
         token = \
             db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=token_id['token_id'], fetch='fetchone')[0]
 
-        token_accounts = list(db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
-                                       values=(token,), fetch='fetchall'))
+        token_accounts = list(
+            db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
+                     values=(token,), fetch='fetchall'))
         text = ''
         count = 1
         builder = InlineKeyboardBuilder()
@@ -307,7 +320,8 @@ async def acc_press_settings_btn(call: CallbackQuery, state: FSMContext):
 
                 count += 1
             level, date_preset, increment = (
-                db.query(query="SELECT level, date_preset, increment FROM adaccounts WHERE acc_id=%s", values=(data['acc_id'],),
+                db.query(query="SELECT level, date_preset, increment FROM adaccounts WHERE acc_id=%s",
+                         values=(data['acc_id'],),
                          fetch='fetchall'))[0]
             text += f"""\n{dialogs.RU_ru['adacc_settings']['date_preset']['text']} {dialogs.RU_ru['adacc_settings']['date_preset'][date_preset]}
 {dialogs.RU_ru['adacc_settings']['level']['text']} {dialogs.RU_ru['adacc_settings']['level'][level]}
@@ -655,8 +669,12 @@ async def scheduler_command(message: Message):
         data = await get_jobs()
         count = 1
         for items in data:
-            job_ids, hour, minute = items
+            job_ids, time = items
             job_id = job_ids.removesuffix(f'_{count}')
+            if ':' in time:
+                hour, minute = time.split(':')
+            else:
+                hour, minute = time.split('.')
             text += f'{job_id} - {hour}:{minute}\n\n'
             count += 1
 
@@ -669,41 +687,150 @@ async def scheduler_add(call: CallbackQuery):
     await call.message.edit_text(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
 
 
-@admin_router.callback_query(F.data == 'all')
-async def scheduler_add_st2(call: CallbackQuery, state: FSMContext):
-    data = call.data
-    button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='scheduler_back_all')
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
-    await state.update_data(choose=data)
+@admin_router.callback_query(F.data.startswith('scheduler_edit_'))
+async def scheduler_add_st_1(call: CallbackQuery, state: FSMContext):
+    data_1 = call.data
+    data = data_1.removeprefix('scheduler_edit_')
+    await state.update_data(choose=data, count=0)
 
-    if data == 'all':
-        await call.message.edit_text(text=dialogs.RU_ru['scheduler']['all_text'], reply_markup=keyboard,
-                                     parse_mode='HTML')
-    else:
-        pass
+    await call.message.edit_text(text=dialogs.RU_ru['scheduler']['add_text'],
+                                 reply_markup=create_scheduler_count_keyboard(count=-1, data=data))
+    await state.set_state(SchedulerList.add_st2)
 
 
-@admin_router.message(F.text.startswith('1. '))
-async def scheduler_add_st3(message: Message, state: FSMContext):
-    date_list = list(i for i in re.split(r'\d+\.', message.text))
-    date_list = [x.strip() for x in date_list if x.strip()]
+@admin_router.callback_query(SchedulerList.add_st2)
+async def scheduler_add_st_2(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    if data['choose'] == 'all':
-        await message.answer(text=f'{dialogs.RU_ru['scheduler']['all_text_done']}{message.text}')
-        await add_job(job_id=data['choose'], date_list=date_list)
-        keyboard = create_schedulers_keyboard()
+    counter = data['count']
+
+    if call.data == f'{data['choose']}_add':
+        try:
+            counter += 1
+            await state.update_data(count=counter)
+            await call.message.edit_text(text=dialogs.RU_ru['scheduler']['add_text'],
+                                         reply_markup=create_scheduler_count_keyboard(count=counter,
+                                                                                      data=data['choose']))
+        except:
+            await call.answer()
+            pass
+        finally:
+            await state.set_state(SchedulerList.add_st2)
+
+    if call.data == f'{data['choose']}_del':
+        try:
+            counter -= 1
+            if counter < 0:
+                counter = 0
+            await state.update_data(count=counter)
+            await call.message.edit_text(text=dialogs.RU_ru['scheduler']['add_text'],
+                                         reply_markup=create_scheduler_count_keyboard(count=counter,
+                                                                                      data=data['choose']))
+        except:
+            await call.answer()
+            pass
+        finally:
+            await state.set_state(SchedulerList.add_st2)
+
+    if call.data.startswith('scheduler_'):
+        await state.update_data(task=call.data)
+        button = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='scheduler2_back')
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
+        await call.message.edit_text(text=dialogs.RU_ru['scheduler']['task_add'], reply_markup=keyboard)
+        await state.set_state(SchedulerList.task)
+
+    if call.data == 'done':
+        temp_dir = os.path.abspath(f'./temp/')
+        file_name = os.path.join(temp_dir, f'{data['choose']}_scheduler.json')
+        try:
+            with open(file_name, 'r') as file:
+                try:
+                    file_data = json.load(file)
+                except json.JSONDecodeError as _ex:
+                    await call.message.edit_text(dialogs.RU_ru['scheduler']['scheduler_add_error'])
+                    await sleep(5)
+                    keyboard = create_schedulers_add_keyboard()
+                    await call.message.answer(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
+                    admin_handlers_logger.error(msg=_ex)
+
+        except FileNotFoundError as _ex:
+            await call.message.edit_text(dialogs.RU_ru['scheduler']['scheduler_add_error'])
+            await sleep(5)
+            keyboard = create_schedulers_add_keyboard()
+            await call.message.answer(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
+            admin_handlers_logger.error(msg=_ex)
+        counter = 1
         text = ''
-        data = await get_jobs()
-        count = 1
-        for items in data:
-            job_ids, hour, minute = items
-            job_id = job_ids.removesuffix(f'_{count}')
-            text += f'{job_id} - {hour}:{minute}\n\n'
-            count += 1
+        for item in file_data:
+            scheduler = f'{data['choose']}_scheduler_{counter}'
+            time = item[scheduler]
+            await add_job(scheduler, time)
+            text += f'{scheduler} - {time}\n\n'
+            counter += 1
 
-        await message.answer(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
+        with open(file_name, 'w') as f:
+            f.write('')
 
-    await state.clear()
+        await call.message.edit_text(text=f'{dialogs.RU_ru['scheduler']['scheduler_add_done']}{text}')
+        await sleep(5)
+        await state.clear()
+        await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
+
+    if call.data == 'scheduler1_back':
+        temp_dir = os.path.abspath(f'./temp/')
+        file_name = os.path.join(temp_dir, f'{data['choose']}_scheduler.json')
+        with open(file_name, 'w') as f:
+            f.write('')
+        await state.clear()
+        keyboard = create_schedulers_add_keyboard()
+        await call.message.edit_text(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
+
+
+@admin_router.message(SchedulerList.task)
+@admin_router.callback_query(SchedulerList.task)
+async def add_task(event: Message | CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    task = data['task']
+    choose = data['choose']
+    if isinstance(event, CallbackQuery):
+        counter = data['count']
+        await event.message.edit_text(text=dialogs.RU_ru['scheduler']['add_text'],
+                                      reply_markup=create_scheduler_count_keyboard(count=counter,
+                                                                                   data=data['choose']))
+    elif isinstance(event, Message):
+        text = {f'{choose}_{task}': event.text}
+        temp_dir = os.path.abspath(f'./temp/')
+        file_name = os.path.join(temp_dir, f'{choose}_scheduler.json')
+        os.makedirs(temp_dir, exist_ok=True)
+
+        file_data = []
+
+        try:
+            with open(file_name, 'r') as file:
+                try:
+                    file_data = json.load(file)
+                except json.JSONDecodeError:
+                    file_data = []
+        except FileNotFoundError:
+            pass
+        existing_item = None
+        for item in file_data:
+            if task in item:
+                existing_item = item
+                break
+
+        if existing_item is not None:
+            existing_item[task] = event.text
+        else:
+            file_data.append(text)
+
+        with open(file_name, 'w') as file:
+            json.dump(file_data, file, indent=4)
+
+        await event.answer(text=dialogs.RU_ru['scheduler']['add_text'],
+                              reply_markup=create_scheduler_count_keyboard(count=data['count'], data=data['choose']))
+
+    await state.update_data(task='')
+    await state.set_state(SchedulerList.add_st2)
 
 
 @admin_router.callback_query(F.data == 'tokens')
@@ -730,9 +857,12 @@ async def scheduler_call(call: CallbackQuery):
         data = await get_jobs()
         count = 1
         for items in data:
-            job_ids, hour, minute = items
-            job_id = job_ids.removesuffix(f'_{count}')
-            text += f'{job_id} - {hour}:{minute}\n\n'
+            job_ids, time = items
+            if ':' in time:
+                hour, minute = time.split(':')
+            else:
+                hour, minute = time.split('.')
+            text += f'{job_ids} - {hour}:{minute}\n\n'
             count += 1
 
         await call.message.edit_text(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
@@ -775,7 +905,7 @@ async def scheduler_back_call(call: CallbackQuery):
         await call.message.edit_text(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
 
 
-@admin_router.callback_query(F.data == 'scheduler_back_all')
+@admin_router.callback_query(F.data == 'scheduler1_back')
 async def scheduler_back_1_call(call: CallbackQuery, state: FSMContext):
     await state.clear()
     keyboard = create_schedulers_add_keyboard()

@@ -50,7 +50,7 @@ class CheckInAdminListMiddleware(BaseMiddleware):
         if user_id in self.admin_users:
             return await handler(event, data)
         else:
-            return await event.answer(
+            return await event.message.answer(
                 dialogs.RU_ru['not_admin'] +
                 f'\n\n<i>Ваш ID: <code>{user_id}</code></i>',
                 parse_mode='HTML', show_alert=False

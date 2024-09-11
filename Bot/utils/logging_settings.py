@@ -41,7 +41,12 @@ LOGGING_CONFIG = {
             'propagate': True,
             'level': 'DEBUG'
         },
-        'HANDLERS': {
+        'USER_HANDLERS': {
+            'handlers': ['stream_handler', 'rotating_files_handler'],
+            'propagate': True,
+            'level': 'DEBUG'
+        },
+        'ADMIN_HANDLERS': {
             'handlers': ['stream_handler', 'rotating_files_handler'],
             'propagate': True,
             'level': 'DEBUG'
@@ -55,7 +60,18 @@ LOGGING_CONFIG = {
             'handlers': ['stream_handler', 'rotating_files_handler'],
             'propagate': True,
             'level': 'DEBUG'
+        },
+        'FACEBOOK_API': {
+            'handlers': ['stream_handler', 'rotating_files_handler'],
+            'propagate': True,
+            'level': 'DEBUG'
+        },
+        'EWEBINAR_API': {
+            'handlers': ['stream_handler', 'rotating_files_handler'],
+            'propagate': True,
+            'level': 'DEBUG'
         }
+
     }
 }
 
@@ -63,6 +79,9 @@ logging.config.dictConfig(LOGGING_CONFIG)
 
 bot_logger = logging.getLogger('BOT')
 database_logger = logging.getLogger('DATABASE')
-handlers_logger = logging.getLogger('HANDLERS')
+user_handlers_logger = logging.getLogger('USER_HANDLERS')
+admin_handlers_logger = logging.getLogger('ADMIN_HANDLERS')
 database_query_logger = logging.getLogger('DATABASE_QUERY')
 scheduler_logger = logging.getLogger('SCHEDULER')
+facebook_logger = logging.getLogger('FACEBOOK_API')
+ewebinar_logger = logging.getLogger('EWEBINAR_API')
