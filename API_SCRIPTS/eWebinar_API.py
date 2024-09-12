@@ -7,7 +7,7 @@ import unidecode
 
 from aiohttp import ClientSession
 
-from Database.database import db
+from Database.database import ewebinar_db, db
 from utils.logging_settings import ewebinar_logger
 
 
@@ -21,7 +21,7 @@ async def check_acc_ewebinar(token):
         async with ClientSession() as session:
             async with session.get(url, headers=headers) as resp:
                 if resp.status == 200:
-                    db.query("INSERT INTO tokens (api_token, service) VALUES (%s, %s)", values=(token, 'eWebinar'),
+                    ewebinar_db.query("INSERT INTO tokens (api_token, service) VALUES (%s, %s)", values=(token, 'eWebinar'),
                              msg='Token eWebinar already exists',
                              log_level=10)
                     return 200
@@ -69,7 +69,7 @@ async def get_all_registrants(user_id):
                     os.mkdir(os.path.abspath(f'../temp/{user_id}'))
                 except:
                     pass
-                db.query("""INSERT INTO ewebinar (id, firstName, lastName, name, email, subscribed, registrationLink, replayLink, 
+                ewebinar_db.query("""INSERT INTO ewebinar (id, firstName, lastName, name, email, subscribed, registrationLink, replayLink, 
                 joinLink, addToCalendarLink, timezone, sessionType, registeredTime, sessionTime, joinedTime, leftTime, attended, 
                 likes, watchedPercent, watchedScheduledPercent, watchedReplayPercent, purchaseAmount, converted, tags, referrer, 
                 origin, utm_source, utm_medium, utm_campaign, utm_term, utm_content, gclid, ip, city, country, source) 
@@ -115,7 +115,7 @@ async def get_all_registrants(user_id):
                              registrant.get('source', '')
                          ))
 
-                db.query(query="""DELETE FROM ewebinar
+                ewebinar_db.query(query="""DELETE FROM ewebinar
                             WHERE ctid NOT IN (
                                 SELECT MIN(ctid)
                                 FROM ewebinar

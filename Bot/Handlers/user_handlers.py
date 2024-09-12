@@ -75,7 +75,7 @@ async def fast_report_all(call: CallbackQuery, bot: Bot):
 
     await reports_which_is_active(user_id=call.from_user.id)
     await get_all_registrants(user_id=call.from_user.id)
-    time_sleep = 905
+    time_sleep = 1205
     while time_sleep > 0:
         if os.path.exists(file_path) and os.path.exists(file_path_1):
             await call.message.delete()
@@ -129,7 +129,7 @@ async def fast_report_ewebinar(call: CallbackQuery, bot: Bot):
     await sleep(0.5)
     await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
     await get_all_registrants(user_id=call.from_user.id)
-    time_sleep = 905
+    time_sleep = 1205
     while time_sleep > 0:
         if os.path.exists(file_path):
             await call.message.delete()

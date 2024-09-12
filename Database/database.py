@@ -2,12 +2,13 @@ from typing import Any
 
 import psycopg2
 
-from config import host, user, password, db_name, port
+from config import host, user, password, db_name, port, db_name_ewebinar
 from Bot.utils.logging_settings import database_logger
+from utils.logging_settings import ewebinar_logger
 
 
 class Database:
-    def __init__(self, host=host, port=port, db_name=db_name, user=user, password=password):
+    def __init__(self, host, port, db_name, user, password):
         try:
             self.connect = psycopg2.connect(host=host,
                                             port=port,
@@ -31,7 +32,7 @@ class Database:
     msg = f'The sql query failed with an error'
 
     def query(self, query: str, values: tuple = None, fetch: str = None, size: int = None, log_level: int = 40,
-              msg: str = msg) -> Any:
+              msg: str = msg, debug: bool = False) -> Any:
         """
         :param query: takes sql query, for example: "SELECT * FROM table"
         :param values: takes tuple of values
@@ -39,6 +40,7 @@ class Database:
         :param size: count of fetching info from database. Default 10, JUST FOR fetchmany
         :param log_level: choose of logging level if needed. Default 40[ERROR]
         :param msg: message for logger
+        :param debug: make Exception error message
 
         - fetch:
             1. fetchone
@@ -89,12 +91,19 @@ class Database:
             self.connect.commit()
             return 'Success'
         except Exception as _ex:
-            database_logger.log(msg=msg, level=log_level)
-            self.cursor.execute('ROLLBACK TO point1')
-            return 'Error'
+            if debug:
+                database_logger.log(msg=_ex, level=log_level)
+                self.cursor.execute('ROLLBACK TO point1')
+                return 'Error'
+            else:
+                database_logger.log(msg=msg, level=log_level)
+                self.cursor.execute('ROLLBACK TO point1')
+                return 'Error'
 
 
-db = Database()
+db = Database(host=host, port=port, db_name=db_name, user=user, password=password)
+
+ewebinar_db = Database(host=host, port=port, db_name=db_name_ewebinar, user=user, password=password)
 
 create_users_table = """
 CREATE TABLE IF NOT EXISTS users (
@@ -245,4 +254,4 @@ db.query(query=create_tokens_table)
 db.query(query=create_adaccounts_table)
 db.query(query=create_reports_table_query)
 db.query(query=create_scheduler_table)
-db.query(query=create_ewebinar_table)
+ewebinar_db.query(query=create_ewebinar_table)
