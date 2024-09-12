@@ -129,7 +129,7 @@ async def fast_report_ewebinar(call: CallbackQuery, bot: Bot):
     await sleep(0.5)
     await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
     await get_all_registrants(user_id=call.from_user.id)
-    time_sleep = 305
+    time_sleep = 905
     while time_sleep > 0:
         if os.path.exists(file_path):
             await call.message.delete()
