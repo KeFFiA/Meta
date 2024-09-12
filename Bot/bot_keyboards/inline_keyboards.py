@@ -232,3 +232,20 @@ def create_scheduler_count_keyboard(count, data):
 
     return builder.as_markup()
 
+
+def create_fast_report_which_keyboard():
+    facebook_btn = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['facebook'], callback_data='fast_report_facebook')
+    ewebinar_btn = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['ewebinar'], callback_data='fast_report_ewebinar')
+    all_btn = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['all'], callback_data='fast_report_all')
+    back_btn = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['menu'], callback_data='main_menu')
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [facebook_btn],
+        [ewebinar_btn],
+        [all_btn],
+        [back_btn]
+    ])
+
+    return keyboard
+
+

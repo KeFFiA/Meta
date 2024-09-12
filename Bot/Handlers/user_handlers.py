@@ -17,6 +17,7 @@ from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, creat
 from Bot.dialogs import commands
 from Bot.utils.States import WhiteList
 from Database.database import db
+from bot_keyboards.inline_keyboards import create_fast_report_which_keyboard
 
 user_router = Router()
 
@@ -49,50 +50,85 @@ async def white_list_cmd(message: Message, state: FSMContext):
     await state.set_state(WhiteList.user)
 
 
-@user_router.message(Command("fast_report"))
-@flags.chat_action("upload_document")
-async def fast_report(message: Message):
-    file_path = os.path.abspath(
-        f'../temp/{message.from_user.id}/report_{datetime.datetime.today().strftime("%Y-%m-%d")}.csv')
-    await message.answer(text=dialogs.RU_ru['wait'])
-    await sleep(0.5)
-    await message.answer(text=dialogs.RU_ru['/menu'],
-                         reply_markup=create_menu_keyboard())
-
-    await reports_which_is_active(user_id=message.from_user.id)
-    await get_all_registrants()
-    time_sleep = 305
-    while time_sleep > 0:
-        if os.path.exists(file_path):
-            await message.delete()
-            await message.answer_document(document=FSInputFile(file_path),
-                                          caption=f'{message.from_user.first_name}{dialogs.RU_ru['fast_report_ok']}')
-
-            shutil.rmtree(os.path.abspath(f'../temp/{message.from_user.id}'))
-
-            await message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
-            break
-        else:
-            await asyncio.sleep(10)
-            time_sleep -= 10
-            if time_sleep == 5:
-                await message.answer(text=dialogs.RU_ru['fast_report_bad'])
-                break
+@user_router.message(Command('fast_report'))
+async def fast_report_cmd(message: Message):
+    await message.answer(text=dialogs.RU_ru['choose'], reply_markup=create_fast_report_which_keyboard())
 
 
 @user_router.callback_query(F.data == 'fast_report')
+async def fast_report(call: CallbackQuery):
+    await call.message.edit_text(text=dialogs.RU_ru['choose'], reply_markup=create_fast_report_which_keyboard())
+
+
+
+@user_router.callback_query(F.data == 'fast_report_all')
 @flags.chat_action("upload_document")
-async def fast_report(call: CallbackQuery, bot: Bot):
+async def fast_report_all(call: CallbackQuery, bot: Bot):
     file_path = os.path.abspath(
-        f'../temp/{call.from_user.id}/report_{datetime.datetime.today().strftime("%Y-%m-%d")}.csv')
-    await call.message.edit_text(text=dialogs.RU_ru['wait'])
+        f'../temp/{call.from_user.id}/facebook_report_{datetime.datetime.today().strftime("%Y-%m-%d")}.csv')
+    file_path_1 = os.path.abspath(
+        f'../temp/{call.from_user.id}/ewebinar_report_{datetime.datetime.today().strftime("%Y-%m-%d")}.csv')
+    await call.message.edit_text(text=dialogs.RU_ru['wait_long'])
     await sleep(0.5)
     await call.message.answer(text=dialogs.RU_ru['/menu'],
                               reply_markup=create_menu_keyboard())
 
     await reports_which_is_active(user_id=call.from_user.id)
-    # TODO: Дописать поддержку файлов
-    await get_all_registrants()
+    await get_all_registrants(user_id=call.from_user.id)
+    time_sleep = 905
+    while time_sleep > 0:
+        if os.path.exists(file_path) and os.path.exists(file_path_1):
+            await call.message.delete()
+            await bot.send_document(chat_id=call.from_user.id, document=FSInputFile(file_path),
+                                    caption=f'{call.from_user.first_name}{dialogs.RU_ru['fast_report_ok']}')
+            await bot.send_document(chat_id=call.from_user.id, document=FSInputFile(file_path_1),
+                                    caption=f'{call.from_user.first_name}{dialogs.RU_ru['fast_report_ok']}')
+
+            shutil.rmtree(os.path.abspath(f'../temp/{call.from_user.id}'))
+            await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
+            break
+        else:
+            await asyncio.sleep(10)
+            time_sleep -= 10
+            if time_sleep == 5:
+                await call.message.answer(text=dialogs.RU_ru['fast_report_bad'])
+                break
+
+
+@user_router.callback_query(F.data == 'fast_report_facebook')
+async def fast_report_facebook(call: CallbackQuery, bot: Bot):
+    file_path = os.path.abspath(
+        f'../temp/{call.from_user.id}/facebook_report_{datetime.datetime.today().strftime("%Y-%m-%d")}.csv')
+    await call.message.edit_text(text=dialogs.RU_ru['wait'])
+    await sleep(0.5)
+    await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
+    await reports_which_is_active(user_id=call.from_user.id)
+    time_sleep = 305
+    while time_sleep > 0:
+        if os.path.exists(file_path):
+            await call.message.delete()
+            await bot.send_document(chat_id=call.from_user.id, document=FSInputFile(file_path),
+                                    caption=f'{call.from_user.first_name}{dialogs.RU_ru['fast_report_ok']}')
+
+            shutil.rmtree(os.path.abspath(f'../temp/{call.from_user.id}'))
+            await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
+            break
+        else:
+            await asyncio.sleep(10)
+            time_sleep -= 10
+            if time_sleep == 5:
+                await call.message.answer(text=dialogs.RU_ru['fast_report_bad'])
+                break
+
+
+@user_router.callback_query(F.data == 'fast_report_ewebinar')
+async def fast_report_ewebinar(call: CallbackQuery, bot: Bot):
+    file_path = os.path.abspath(
+        f'../temp/{call.from_user.id}/ewebinar_report_{datetime.datetime.today().strftime("%Y-%m-%d")}.csv')
+    await call.message.edit_text(text=dialogs.RU_ru['wait_long'])
+    await sleep(0.5)
+    await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
+    await get_all_registrants(user_id=call.from_user.id)
     time_sleep = 305
     while time_sleep > 0:
         if os.path.exists(file_path):

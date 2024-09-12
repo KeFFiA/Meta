@@ -40,7 +40,7 @@ def check_adacc_facebook(token):
         return 'BAD'
 
 
-async def reports_which_is_active(user_id='reserved'):
+async def reports_which_is_active(user_id='reserved_facebook'):
     adacc_ids = db.query(query="SELECT acc_id, api_token, date_preset, increment, level FROM adaccounts "
                                "WHERE is_active = TRUE",
                          fetch='fetchall')
@@ -135,11 +135,11 @@ async def reports_which_is_active(user_id='reserved'):
                     data = await response.json()
 
                     try:
-                        file_pattern = f'../API_SCRIPTS/temp/{user_id}/report_{datetime.datetime.today().strftime('%Y-%m-%d')}_*.csv'
+                        file_pattern = f'../API_SCRIPTS/temp/{user_id}/facebook_report_{datetime.datetime.today().strftime('%Y-%m-%d')}_*.csv'
                         filename = os.path.abspath(
-                            f'../API_SCRIPTS/temp/{user_id}/report_{datetime.datetime.today().strftime('%Y-%m-%d')}_{item}.csv')
+                            f'../API_SCRIPTS/temp/{user_id}/facebook_report_{datetime.datetime.today().strftime('%Y-%m-%d')}_{item}.csv')
                         filename_2 = os.path.abspath(
-                            f'../temp/{user_id}/report_{datetime.datetime.today().strftime('%Y-%m-%d')}.csv')
+                            f'../temp/{user_id}/facebook_report_{datetime.datetime.today().strftime('%Y-%m-%d')}.csv')
                         for record in data.get('data', []):
                             db.query(
                                 query="INSERT INTO reports (account_name, account_id, campaign_name, campaign_id, adset_name, "
@@ -180,7 +180,6 @@ async def reports_which_is_active(user_id='reserved'):
                         try:
                             with open(filename, mode='a', newline='', encoding='utf-8') as csvfile:
                                 writer = csv.writer(csvfile)
-                                # Заголовки
                                 writer.writerow([
                                     'account_name', 'account_id', 'campaign_name', 'campaign_id',
                                     'adset_name', 'adset_id', 'ad_name', 'ad_id',
