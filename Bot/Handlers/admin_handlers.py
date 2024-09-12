@@ -897,8 +897,9 @@ async def scheduler_back_call(call: CallbackQuery):
         data = await get_jobs()
         count = 1
         for items in data:
-            job_ids, hour, minute = items
+            job_ids, time = items
             job_id = job_ids.removesuffix(f'_{count}')
+            hour, minute = time.split(':')
             text += f'{job_id} - {hour}:{minute}\n\n'
             count += 1
 

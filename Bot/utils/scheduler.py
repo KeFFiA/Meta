@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from API_SCRIPTS.Facebook_API import reports_which_is_active
+from API_SCRIPTS.eWebinar_API import get_all_registrants
 from Database.database import db
 
 from .logging_settings import scheduler_logger
@@ -44,8 +45,16 @@ async def all_acc_reports_job(job_id):
     try:
         await reports_which_is_active()
         scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
-    except:
-        pass
+    except Exception as e:
+        scheduler_logger.error(f"Error executing job {job_id}: {e}")
+
+
+async def ewebinar_reports_job(job_id):
+    try:
+        await get_all_registrants()
+        scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
+    except Exception as e:
+        scheduler_logger.error(f"Error executing job {job_id}: {e}")
 
 
 async def load_jobs():
@@ -59,8 +68,14 @@ async def load_jobs():
             else:
                 scheduler_logger.error(f"Invalid time format for job {job_id}: {time}")
                 continue
-            scheduler.add_job(all_acc_reports_job, 'cron', hour=hour, minute=minute, args=[job_id],
-                              id=job_id, replace_existing=True)
+
+            if job_id.startswith('facebook_'):
+                scheduler.add_job(all_acc_reports_job, 'cron', hour=hour, minute=minute, args=[job_id],
+                                  id=job_id, replace_existing=True)
+            elif job_id.startswith('ewebinar_'):
+                scheduler.add_job(ewebinar_reports_job, 'cron', hour=hour, minute=minute, args=[job_id],
+                                  id=job_id, replace_existing=True)
+
         scheduler_logger.info('Jobs loaded correctly.')
     except Exception as _ex:
         scheduler_logger.error(f'Failed to load jobs\n{_ex}')

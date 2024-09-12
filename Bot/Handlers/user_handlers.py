@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
 
 from API_SCRIPTS.Facebook_API import reports_which_is_active
+from API_SCRIPTS.eWebinar_API import get_all_registrants
 from Bot import dialogs
 from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, create_menu_keyboard, \
     create_help_menu_keyboard, create_help_menu_white_list_keyboard, create_help_menu_tokens_keyboard
@@ -59,6 +60,7 @@ async def fast_report(message: Message):
                          reply_markup=create_menu_keyboard())
 
     await reports_which_is_active(user_id=message.from_user.id)
+    await get_all_registrants()
     time_sleep = 305
     while time_sleep > 0:
         if os.path.exists(file_path):
@@ -89,6 +91,8 @@ async def fast_report(call: CallbackQuery, bot: Bot):
                               reply_markup=create_menu_keyboard())
 
     await reports_which_is_active(user_id=call.from_user.id)
+    # TODO: Дописать поддержку файлов
+    await get_all_registrants()
     time_sleep = 305
     while time_sleep > 0:
         if os.path.exists(file_path):
