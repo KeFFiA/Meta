@@ -199,7 +199,7 @@ create_scheduler_table = """CREATE TABLE IF NOT EXISTS scheduled_jobs (
 
 create_ewebinar_table = '''
     CREATE TABLE IF NOT EXISTS ewebinar (
-        id VARCHAR PRIMARY KEY,
+        id VARCHAR,
         firstName VARCHAR,
         lastName VARCHAR,
         name VARCHAR,
