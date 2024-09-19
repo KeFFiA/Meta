@@ -70,7 +70,12 @@ LOGGING_CONFIG = {
             'handlers': ['stream_handler', 'rotating_files_handler'],
             'propagate': True,
             'level': 'DEBUG'
-        }
+        },
+        'GETCOURSE_API': {
+            'handlers': ['stream_handler', 'rotating_files_handler'],
+            'propagate': True,
+            'level': 'DEBUG'
+        },
 
     }
 }
@@ -85,3 +90,4 @@ database_query_logger = logging.getLogger('DATABASE_QUERY')
 scheduler_logger = logging.getLogger('SCHEDULER')
 facebook_logger = logging.getLogger('FACEBOOK_API')
 ewebinar_logger = logging.getLogger('EWEBINAR_API')
+getcourse_logger = logging.getLogger('GETCOURSE_API')

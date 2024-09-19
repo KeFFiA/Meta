@@ -90,6 +90,7 @@ RU_ru = {
         'done': 'Готово',
         'facebook': 'Facebook',
         'ewebinar': 'eWebinar',
+        'getcourse': 'GetCourse',
         'all': 'Все',
     },
     'adacc_settings': {

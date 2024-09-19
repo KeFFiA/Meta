@@ -56,11 +56,11 @@ async def add_token_cmd(message: Message, command: CommandObject):
         return
     try:
         try:
-            service, token = command.args.split(" ", maxsplit=1)
+            service, token = command.args.split(" ", maxsplit=2)
             if service.lower() == "facebook":
                 res = check_adacc_facebook(token)
             elif service.lower() == "getcourse":
-                res = ''
+                res = check_acc_ewebinar(token)
             elif service.lower() == "ewebinar":
                 res = await check_acc_ewebinar(token)
 

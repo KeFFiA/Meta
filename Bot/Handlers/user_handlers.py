@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
 
 from API_SCRIPTS.Facebook_API import reports_which_is_active
+from API_SCRIPTS.GetCourse_API import getcourse_users_report
 from API_SCRIPTS.eWebinar_API import get_all_registrants
 from Bot import dialogs
 from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, create_menu_keyboard, \
@@ -75,7 +76,8 @@ async def fast_report_all(call: CallbackQuery, bot: Bot):
 
     await reports_which_is_active(user_id=call.from_user.id)
     await get_all_registrants(user_id=call.from_user.id)
-    time_sleep = 1205
+    await getcourse_users_report()
+    time_sleep = 1505
     while time_sleep > 0:
         if os.path.exists(file_path) and os.path.exists(file_path_1):
             await call.message.delete()
@@ -96,6 +98,7 @@ async def fast_report_all(call: CallbackQuery, bot: Bot):
 
 
 @user_router.callback_query(F.data == 'fast_report_facebook')
+@flags.chat_action("upload_document")
 async def fast_report_facebook(call: CallbackQuery, bot: Bot):
     file_path = os.path.abspath(
         f'../temp/{call.from_user.id}/facebook_report_{datetime.datetime.today().strftime("%Y-%m-%d")}.csv')
@@ -122,6 +125,7 @@ async def fast_report_facebook(call: CallbackQuery, bot: Bot):
 
 
 @user_router.callback_query(F.data == 'fast_report_ewebinar')
+@flags.chat_action("upload_document")
 async def fast_report_ewebinar(call: CallbackQuery, bot: Bot):
     file_path = os.path.abspath(
         f'../temp/{call.from_user.id}/ewebinar_report_{datetime.datetime.today().strftime("%Y-%m-%d")}.csv')
@@ -129,7 +133,7 @@ async def fast_report_ewebinar(call: CallbackQuery, bot: Bot):
     await sleep(0.5)
     await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
     await get_all_registrants(user_id=call.from_user.id)
-    time_sleep = 1205
+    time_sleep = 1505
     while time_sleep > 0:
         if os.path.exists(file_path):
             await call.message.delete()
@@ -145,6 +149,13 @@ async def fast_report_ewebinar(call: CallbackQuery, bot: Bot):
             if time_sleep == 5:
                 await call.message.answer(text=dialogs.RU_ru['fast_report_bad'])
                 break
+
+
+@user_router.callback_query(F.data == 'fast_report_getcourse')
+@flags.chat_action("upload_document")
+async def fast_report_getcourse(call: CallbackQuery):
+    await getcourse_users_report()
+    await call.message.edit_text(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
 
 
 @user_router.message(Command('help'))

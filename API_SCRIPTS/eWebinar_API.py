@@ -21,7 +21,7 @@ async def check_acc_ewebinar(token):
         async with ClientSession() as session:
             async with session.get(url, headers=headers) as resp:
                 if resp.status == 200:
-                    ewebinar_db.query("INSERT INTO tokens (api_token, service) VALUES (%s, %s)", values=(token, 'eWebinar'),
+                    db.query("INSERT INTO tokens (api_token, service) VALUES (%s, %s)", values=(token, 'eWebinar'),
                              msg='Token eWebinar already exists',
                              log_level=10)
                     return 200
@@ -51,7 +51,7 @@ async def fetch_registrants(session, cursor=None):
             ewebinar_logger.error(msg=f"Error fetching data: {_ex}")
 
 
-async def get_all_registrants(user_id):
+async def get_all_registrants(user_id='reserved_ewebinar'):
     next_cursor = None
     item = 0
     async with ClientSession() as session:

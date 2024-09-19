@@ -2,9 +2,9 @@ from typing import Any
 
 import psycopg2
 
-from config import host, user, password, db_name, port, db_name_ewebinar
+from config import host, user, password, db_name, port, db_name_ewebinar, db_name_getcourse, russia_host, russia_port, \
+    russia_db_name, russia_user, russia_password
 from Bot.utils.logging_settings import database_logger
-from utils.logging_settings import ewebinar_logger
 
 
 class Database:
@@ -14,9 +14,10 @@ class Database:
                                             port=port,
                                             database=db_name,
                                             user=user,
-                                            password=password)
+                                            password=password,
+                                            options="-c client_encoding=UTF8")
             self.cursor = self.connect.cursor()
-            database_logger.debug('DataBase connection...')
+            database_logger.debug(f'DataBase - *{db_name}* connection...')
             with self.connect.cursor() as cursor:
                 cursor.execute(
                     "SELECT version();"
@@ -105,6 +106,8 @@ db = Database(host=host, port=port, db_name=db_name, user=user, password=passwor
 
 ewebinar_db = Database(host=host, port=port, db_name=db_name_ewebinar, user=user, password=password)
 
+getcourse_db = Database(host=russia_host, port=russia_port, db_name=russia_db_name, user=russia_user, password=russia_password)
+
 create_users_table = """
 CREATE TABLE IF NOT EXISTS users (
     user_id BIGINT UNIQUE NOT NULL,
@@ -128,7 +131,8 @@ create_tokens_table = """
     CREATE TABLE IF NOT EXISTS tokens (
         id SERIAL PRIMARY KEY,
         api_token TEXT UNIQUE NOT NULL,
-        service TEXT NOT NULL
+        service TEXT NOT NULL,
+        account_name TEXT DEFAULT NULL
     )
     """
 
@@ -248,6 +252,77 @@ create_ewebinar_table = '''
     '''
 
 
+create_getcourse_table = """
+    CREATE TABLE IF NOT EXISTS GetCourse (
+        id VARCHAR(250),
+        Email VARCHAR(250),
+        Registration_Type VARCHAR(250),
+        Created VARCHAR(250),
+        Last_Activity VARCHAR(250),
+        First_Name VARCHAR(250),
+        Last_Name VARCHAR(250),
+        Phone VARCHAR(250),
+        Date_of_Birth VARCHAR(250),
+        Age VARCHAR(250),
+        Country VARCHAR(250),
+        City VARCHAR(250),
+        From_Partner VARCHAR(250),
+        Client_Portrait VARCHAR(250),
+        Comments VARCHAR(250),
+        Bil_minut VARCHAR(250),
+        Dosmotrel_do_kontsa VARCHAR(250),
+        Button_Click VARCHAR(250),
+        Web_Room VARCHAR(250),
+        Data_Webinara VARCHAR(250),
+        Vremya_Start VARCHAR(250),
+        Vremya_End VARCHAR(250),
+        Bil_na_Webe VARCHAR(250),
+        Banner_Click VARCHAR(250),
+        SB_ID VARCHAR(250),
+        Partner_ID VARCHAR(250),
+        Partner_Email VARCHAR(250),
+        Partner_Full_Name VARCHAR(250),
+        utm_source VARCHAR(250),
+        utm_medium VARCHAR(250),
+        utm_campaign VARCHAR(250),
+        utm_term VARCHAR(250),
+        utm_content VARCHAR(250),
+        Bil_minut_2 VARCHAR(250),
+        utm_group VARCHAR(250),
+        btn_1 VARCHAR(250),
+        btn_2 VARCHAR(250),
+        btn_3 VARCHAR(250),
+        LM_utm_source VARCHAR(250),
+        LM_utm_medium VARCHAR(250),
+        LM_utm_term VARCHAR(250),
+        LM_utm_content VARCHAR(250),
+        LM_utm_campaign VARCHAR(250),
+        btn_4 VARCHAR(250),
+        btn_5 VARCHAR(250),
+        btn_6 VARCHAR(250),
+        Instagram_Telegram_Nick VARCHAR(250),
+        Income_Money VARCHAR(250),
+        btn_7 VARCHAR(250),
+        btn_8 VARCHAR(250),
+        web_time VARCHAR(250),
+        webhook_time_web VARCHAR(250),
+        btn_9 VARCHAR(250),
+        From_Where VARCHAR(250),
+        utm_source_2 VARCHAR(250),
+        utm_medium_2 VARCHAR(250),
+        utm_campaign_2 VARCHAR(250),
+        utm_term_2 VARCHAR(250),
+        utm_content_2 VARCHAR(250),
+        utm_group_2 VARCHAR(250),
+        Partner_ID_2 VARCHAR(250),
+        Partner_Email_2 VARCHAR(250),
+        Partner_FullName VARCHAR(250),
+        Manager_FullName VARCHAR(250),
+        VK_ID VARCHAR(250)
+    );
+    """
+
+
 db.query(query=create_users_table)
 db.query(query=create_white_list_table)
 db.query(query=create_tokens_table)
@@ -255,3 +330,4 @@ db.query(query=create_adaccounts_table)
 db.query(query=create_reports_table_query)
 db.query(query=create_scheduler_table)
 ewebinar_db.query(query=create_ewebinar_table)
+getcourse_db.query(query=create_getcourse_table)
