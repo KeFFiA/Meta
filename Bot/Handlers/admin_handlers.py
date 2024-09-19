@@ -17,7 +17,7 @@ from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, creat
 from Bot.utils.States import WhiteList, TokenList, AdaccountsList, SchedulerList
 from Bot.utils.scheduler import add_job, get_jobs
 from Database.database import db
-from utils.logging_settings import admin_handlers_logger
+from Bot.utils.logging_settings import admin_handlers_logger
 
 admin_router = Router()
 

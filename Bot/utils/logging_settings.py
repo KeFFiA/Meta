@@ -21,7 +21,7 @@ LOGGING_CONFIG = {
         'rotating_files_handler': {
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'default_formatter',
-            'filename': os.path.abspath('../Logs/log.log'),
+            'filename': os.path.abspath('../Meta/Logs/log.log'),
             'encoding': 'UTF-8',
             'maxBytes': 1000000,
             'backupCount': 3,

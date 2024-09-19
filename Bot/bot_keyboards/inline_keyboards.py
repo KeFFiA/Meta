@@ -5,7 +5,6 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from Bot import dialogs
-from Database.database import db
 from Database.database_query import white_list, token_list
 
 

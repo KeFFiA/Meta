@@ -2,7 +2,7 @@ from typing import Any
 
 import psycopg2
 
-from config import host, user, password, db_name, port, db_name_ewebinar, db_name_getcourse, russia_host, russia_port, \
+from config import host, user, password, db_name, port, db_name_ewebinar, russia_host, russia_port, \
     russia_db_name, russia_user, russia_password
 from Bot.utils.logging_settings import database_logger
 

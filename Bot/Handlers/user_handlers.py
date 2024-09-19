@@ -18,7 +18,7 @@ from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, creat
 from Bot.dialogs import commands
 from Bot.utils.States import WhiteList
 from Database.database import db
-from bot_keyboards.inline_keyboards import create_fast_report_which_keyboard
+from Bot.bot_keyboards.inline_keyboards import create_fast_report_which_keyboard
 
 user_router = Router()
 

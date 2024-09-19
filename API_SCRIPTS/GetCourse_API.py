@@ -4,7 +4,7 @@ from asyncio import sleep
 from aiohttp import ClientSession
 
 from Database.database import db, getcourse_db
-from utils.logging_settings import ewebinar_logger, getcourse_logger
+from Bot.utils.logging_settings import ewebinar_logger, getcourse_logger
 
 
 async def check_acc_getcourse(token, account_name):

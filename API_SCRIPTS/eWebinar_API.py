@@ -8,7 +8,7 @@ import unidecode
 from aiohttp import ClientSession
 
 from Database.database import ewebinar_db, db
-from utils.logging_settings import ewebinar_logger
+from Bot.utils.logging_settings import ewebinar_logger
 
 
 async def check_acc_ewebinar(token):
