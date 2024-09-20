@@ -65,8 +65,8 @@ async def get_all_registrants(user_id='reserved_ewebinar'):
 
             for registrant in registrants:
                 try:
-                    os.mkdir(os.path.abspath(f'../API_SCRIPTS/temp/{user_id}'))
-                    os.mkdir(os.path.abspath(f'../temp/{user_id}'))
+                    os.mkdir(os.path.abspath(f'../Meta/API_SCRIPTS/temp/{user_id}'))
+                    os.mkdir(os.path.abspath(f'../Meta/temp/{user_id}'))
                 except:
                     pass
                 ewebinar_db.query("""INSERT INTO ewebinar (id, firstName, lastName, name, email, subscribed, registrationLink, replayLink, 
@@ -125,11 +125,11 @@ async def get_all_registrants(user_id='reserved_ewebinar'):
                 referrer, origin, utm_source, utm_medium, utm_campaign, utm_term, utm_content, gclid, ip, city, country, source
                             );""")
 
-                file_pattern = f'../API_SCRIPTS/temp/{user_id}/ewebinar_report_{datetime.datetime.today().strftime('%Y-%m-%d')}_*.csv'
+                file_pattern = f'../Meta/API_SCRIPTS/temp/{user_id}/ewebinar_report_{datetime.datetime.today().strftime('%Y-%m-%d')}_*.csv'
                 filename = os.path.abspath(
-                    f'../API_SCRIPTS/temp/{user_id}/ewebinar_report_{datetime.datetime.today().strftime('%Y-%m-%d')}_{item}.csv')
+                    f'../Meta/API_SCRIPTS/temp/{user_id}/ewebinar_report_{datetime.datetime.today().strftime('%Y-%m-%d')}_{item}.csv')
                 filename_2 = os.path.abspath(
-                    f'../temp/{user_id}/ewebinar_report_{datetime.datetime.today().strftime('%Y-%m-%d')}.csv')
+                    f'../Meta/temp/{user_id}/ewebinar_report_{datetime.datetime.today().strftime('%Y-%m-%d')}.csv')
 
                 with open(filename, mode='w', newline='', encoding='utf-8') as csvfile:
                     fieldnames = [
@@ -197,7 +197,7 @@ async def get_all_registrants(user_id='reserved_ewebinar'):
             for file_name in file_list:
                 with open(file_name, 'r', encoding='utf-8') as infile:
                     out.write(infile.read())
-        shutil.rmtree(os.path.abspath(f'../API_SCRIPTS/temp/{user_id}'))
+        shutil.rmtree(os.path.abspath(f'../Meta/API_SCRIPTS/temp/{user_id}'))
     except Exception as _ex:
         ewebinar_logger.error(msg=f'CSV write canceled with error: {_ex}')
 

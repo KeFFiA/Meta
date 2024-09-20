@@ -32,11 +32,12 @@ class Database:
 
     msg = f'The sql query failed with an error'
 
-    def query(self, query: str, values: tuple = None, fetch: str = None, size: int = None, log_level: int = 40,
+    def query(self, query: str, values: tuple = None, execute_many = False, fetch: str = None, size: int = None, log_level: int = 40,
               msg: str = msg, debug: bool = False) -> Any:
         """
         :param query: takes sql query, for example: "SELECT * FROM table"
         :param values: takes tuple of values
+        :param execute_many: if True - change cursor *execute* to *execute_many*
         :param fetch: choose of one upper this list
         :param size: count of fetching info from database. Default 10, JUST FOR fetchmany
         :param log_level: choose of logging level if needed. Default 40[ERROR]
@@ -87,7 +88,10 @@ class Database:
                     if values is None:
                         cursor.execute(query)
                     else:
-                        cursor.execute(query, values)
+                        if execute_many:
+                            cursor.executemany(query, values)
+                        else:
+                            cursor.execute(query, values)
             self.cursor.execute('RELEASE point1')
             self.connect.commit()
             return 'Success'
@@ -252,73 +256,75 @@ create_ewebinar_table = '''
     '''
 
 
-create_getcourse_table = """
-    CREATE TABLE IF NOT EXISTS GetCourse (
-        id VARCHAR(250),
-        Email VARCHAR(250),
-        Registration_Type VARCHAR(250),
-        Created VARCHAR(250),
-        Last_Activity VARCHAR(250),
-        First_Name VARCHAR(250),
-        Last_Name VARCHAR(250),
-        Phone VARCHAR(250),
-        Date_of_Birth VARCHAR(250),
-        Age VARCHAR(250),
-        Country VARCHAR(250),
-        City VARCHAR(250),
-        From_Partner VARCHAR(250),
-        Client_Portrait VARCHAR(250),
-        Comments VARCHAR(250),
-        Bil_minut VARCHAR(250),
-        Dosmotrel_do_kontsa VARCHAR(250),
-        Button_Click VARCHAR(250),
-        Web_Room VARCHAR(250),
-        Data_Webinara VARCHAR(250),
-        Vremya_Start VARCHAR(250),
-        Vremya_End VARCHAR(250),
-        Bil_na_Webe VARCHAR(250),
-        Banner_Click VARCHAR(250),
-        SB_ID VARCHAR(250),
-        Partner_ID VARCHAR(250),
-        Partner_Email VARCHAR(250),
-        Partner_Full_Name VARCHAR(250),
-        utm_source VARCHAR(250),
-        utm_medium VARCHAR(250),
-        utm_campaign VARCHAR(250),
-        utm_term VARCHAR(250),
-        utm_content VARCHAR(250),
-        Bil_minut_2 VARCHAR(250),
-        utm_group VARCHAR(250),
-        btn_1 VARCHAR(250),
-        btn_2 VARCHAR(250),
-        btn_3 VARCHAR(250),
-        LM_utm_source VARCHAR(250),
-        LM_utm_medium VARCHAR(250),
-        LM_utm_term VARCHAR(250),
-        LM_utm_content VARCHAR(250),
-        LM_utm_campaign VARCHAR(250),
-        btn_4 VARCHAR(250),
-        btn_5 VARCHAR(250),
-        btn_6 VARCHAR(250),
-        Instagram_Telegram_Nick VARCHAR(250),
-        Income_Money VARCHAR(250),
-        btn_7 VARCHAR(250),
-        btn_8 VARCHAR(250),
-        web_time VARCHAR(250),
-        webhook_time_web VARCHAR(250),
-        btn_9 VARCHAR(250),
-        From_Where VARCHAR(250),
-        utm_source_2 VARCHAR(250),
-        utm_medium_2 VARCHAR(250),
-        utm_campaign_2 VARCHAR(250),
-        utm_term_2 VARCHAR(250),
-        utm_content_2 VARCHAR(250),
-        utm_group_2 VARCHAR(250),
-        Partner_ID_2 VARCHAR(250),
-        Partner_Email_2 VARCHAR(250),
-        Partner_FullName VARCHAR(250),
-        Manager_FullName VARCHAR(250),
-        VK_ID VARCHAR(250)
+create_getcourse_users_table =  """
+    CREATE TABLE IF NOT EXISTS GetCourse_users (
+        id TEXT UNIQUE,
+        Email TEXT,
+        Registration_Type TEXT,
+        Created TEXT,
+        Last_Activity TEXT,
+        First_Name TEXT,
+        Last_Name TEXT,
+        Phone TEXT,
+        Date_of_Birth TEXT,
+        Age TEXT,
+        Country TEXT,
+        City TEXT,
+        From_Partner TEXT,
+        Client_Portrait TEXT,
+        Comments TEXT,
+        Bil_minut TEXT,
+        Dosmotrel_do_kontsa TEXT,
+        Button_Click TEXT,
+        Web_Room TEXT,
+        Data_Webinara TEXT,
+        Vremya_Start TEXT,
+        Vremya_End TEXT,
+        Bil_na_Webe TEXT,
+        Banner_Click TEXT,
+        City_2 TEXT,
+        Pay_At TEXT,
+        SB_ID TEXT,
+        Partner_ID TEXT,
+        Partner_Email TEXT,
+        Partner_Full_Name TEXT,
+        utm_source TEXT,
+        utm_medium TEXT,
+        utm_campaign TEXT,
+        utm_term TEXT,
+        utm_content TEXT,
+        Bil_minut_2 TEXT,
+        utm_group TEXT,
+        btn_1 TEXT,
+        btn_2 TEXT,
+        btn_3 TEXT,
+        LM_utm_source TEXT,
+        LM_utm_medium TEXT,
+        LM_utm_term TEXT,
+        LM_utm_content TEXT,
+        LM_utm_campaign TEXT,
+        btn_4 TEXT,
+        btn_5 TEXT,
+        btn_6 TEXT,
+        Instagram_Telegram_Nick TEXT,
+        Income_Money TEXT,
+        btn_7 TEXT,
+        btn_8 TEXT,
+        web_time TEXT,
+        webhook_time_web TEXT,
+        btn_9 TEXT,
+        From_Where TEXT,
+        utm_source_2 TEXT,
+        utm_medium_2 TEXT,
+        utm_campaign_2 TEXT,
+        utm_term_2 TEXT,
+        utm_content_2 TEXT,
+        utm_group_2 TEXT,
+        Partner_ID_2 TEXT,
+        Partner_Email_2 TEXT,
+        Partner_FullName TEXT,
+        Manager_FullName TEXT,
+        VK_ID TEXT
     );
     """
 
@@ -330,4 +336,4 @@ db.query(query=create_adaccounts_table)
 db.query(query=create_reports_table_query)
 db.query(query=create_scheduler_table)
 ewebinar_db.query(query=create_ewebinar_table)
-getcourse_db.query(query=create_getcourse_table)
+getcourse_db.query(query=create_getcourse_users_table)
