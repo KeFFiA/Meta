@@ -108,13 +108,18 @@ def create_schedulers_keyboard():
 
 
 def create_schedulers_add_keyboard():
-    button_add_all = InlineKeyboardButton(text=dialogs.RU_ru['scheduler']['all'], callback_data='scheduler_edit_facebook')
+    button_add_facebook = InlineKeyboardButton(text=dialogs.RU_ru['scheduler']['facebook'],
+                                               callback_data='scheduler_edit_facebook')
     button_add_eWebinar = InlineKeyboardButton(text=dialogs.RU_ru['scheduler']['ewebinar'],
                                                callback_data='scheduler_edit_ewebinar')
+    button_add_getcourse = InlineKeyboardButton(text=dialogs.RU_ru['scheduler']['getcourse'],
+                                                callback_data='scheduler_edit_getcourse')
+
     back_menu = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='scheduler_back')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [button_add_all],
+        [button_add_facebook],
         [button_add_eWebinar],
+        [button_add_getcourse],
         [back_menu]
     ])
     return keyboard
