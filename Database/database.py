@@ -208,59 +208,60 @@ create_reports_table_query = """
     );
     """
 
-create_scheduler_table = """CREATE TABLE IF NOT EXISTS scheduled_jobs (
-                    job_id VARCHAR(255) UNIQUE NOT NULL,
-                    time VARCHAR
-                );
+create_scheduler_table = """
+    CREATE TABLE IF NOT EXISTS scheduled_jobs (
+        job_id VARCHAR(255) UNIQUE NOT NULL,
+        time VARCHAR
+    );
 """
 
 create_ewebinar_table = """
     CREATE TABLE IF NOT EXISTS EWEBINAR (
-    actions TEXT,
-    addToCalendarLink TEXT,
-    allWebinarsLink TEXT,
-    attended TEXT,
-    chatsSent TEXT,
-    city TEXT,
-    country TEXT,
-    deviceTypeWhenRegistered TEXT,
-    deviceTypeWhenWatching TEXT,
-    email TEXT,
-    emailVerified TEXT,
-    firstName TEXT,
-    firstOrigin TEXT,
-    firstReferrer TEXT,
-    httpsdrivegoogle TEXT,
-    id TEXT,
-    ip TEXT,
-    joinedTime TEXT,
-    joinLink TEXT,
-    lastName TEXT,
-    leftTime TEXT,
-    likes TEXT,
-    name TEXT,
-    neurographicsCourse TEXT,
-    origin TEXT,
-    referrer TEXT,
-    registeredTime TEXT,
-    registrationLink TEXT,
-    replayLink TEXT,
-    sessionTime TEXT,
-    sessionType TEXT,
-    source TEXT,
-    state TEXT,
-    subscribed TEXT,
-    timezone TEXT,
-    totalWatchedPercent TEXT,
-    utm_campaign TEXT,
-    utm_content TEXT,
-    utm_medium TEXT,
-    utm_source TEXT,
-    utm_term TEXT,
-    watchedScheduledPercent TEXT,
-    webinarId TEXT,
-    webinarTitle TEXT
-        );
+        actions TEXT,
+        addToCalendarLink TEXT,
+        allWebinarsLink TEXT,
+        attended TEXT,
+        chatsSent TEXT,
+        city TEXT,
+        country TEXT,
+        deviceTypeWhenRegistered TEXT,
+        deviceTypeWhenWatching TEXT,
+        email TEXT,
+        emailVerified TEXT,
+        firstName TEXT,
+        firstOrigin TEXT,
+        firstReferrer TEXT,
+        httpsdrivegoogle TEXT,
+        id TEXT,
+        ip TEXT,
+        joinedTime TEXT,
+        joinLink TEXT,
+        lastName TEXT,
+        leftTime TEXT,
+        likes TEXT,
+        name TEXT,
+        neurographicsCourse TEXT,
+        origin TEXT,
+        referrer TEXT,
+        registeredTime TEXT,
+        registrationLink TEXT,
+        replayLink TEXT,
+        sessionTime TEXT,
+        sessionType TEXT,
+        source TEXT,
+        state TEXT,
+        subscribed TEXT,
+        timezone TEXT,
+        totalWatchedPercent TEXT,
+        utm_campaign TEXT,
+        utm_content TEXT,
+        utm_medium TEXT,
+        utm_source TEXT,
+        utm_term TEXT,
+        watchedScheduledPercent TEXT,
+        webinarId TEXT,
+        webinarTitle TEXT
+    );
     """
 
 

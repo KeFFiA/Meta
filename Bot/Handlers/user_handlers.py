@@ -132,7 +132,7 @@ async def fast_report_ewebinar(call: CallbackQuery, bot: Bot):
     await call.message.edit_text(text=dialogs.RU_ru['wait_long'])
     await sleep(0.5)
     await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
-    await get_all_registrants(user_id=call.from_user.id)
+    await get_all_registrants()
     time_sleep = 1505
     while time_sleep > 0:
         if os.path.exists(file_path):

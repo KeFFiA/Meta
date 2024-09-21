@@ -42,7 +42,7 @@ async def get_jobs():
     return db.query(query='SELECT job_id, time FROM scheduled_jobs ORDER BY job_id', fetch='fetchall')
 
 
-async def all_acc_reports_job(job_id):
+async def facebook_reports_job(job_id):
     try:
         await reports_which_is_active()
         scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
@@ -79,7 +79,7 @@ async def load_jobs():
                 continue
 
             if job_id.startswith('facebook_'):
-                scheduler.add_job(all_acc_reports_job, 'cron', hour=hour, minute=minute, args=[job_id],
+                scheduler.add_job(facebook_reports_job, 'cron', hour=hour, minute=minute, args=[job_id],
                                   id=job_id, replace_existing=True)
             elif job_id.startswith('ewebinar_'):
                 scheduler.add_job(ewebinar_reports_job, 'cron', hour=hour, minute=minute, args=[job_id],
