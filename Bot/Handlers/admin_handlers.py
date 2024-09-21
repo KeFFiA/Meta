@@ -8,6 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+import config
 from API_SCRIPTS.Facebook_API import check_adacc_facebook
 from API_SCRIPTS.eWebinar_API import check_acc_ewebinar
 from Bot import dialogs
@@ -76,7 +77,7 @@ async def add_token_cmd(message: Message, command: CommandObject):
                 await message.answer(text=dialogs.RU_ru['request_facebook']['else'],
                                      reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                                          [
-                                             InlineKeyboardButton(url='tg://user?id=409445811', text='Написать')
+                                             InlineKeyboardButton(url=f'tg://user?id={config.developer_id}', text='Написать')
                                          ]
                                      ]))
         except:

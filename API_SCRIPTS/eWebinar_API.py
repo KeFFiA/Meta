@@ -1,9 +1,9 @@
-import csv
-import datetime
-import glob
-import os
-import shutil
-import unidecode
+# import csv
+# import datetime
+# import glob
+# import os
+# import shutil
+# import unidecode
 
 from aiohttp import ClientSession
 
@@ -21,183 +21,119 @@ async def check_acc_ewebinar(token):
         async with ClientSession() as session:
             async with session.get(url, headers=headers) as resp:
                 if resp.status == 200:
-                    db.query("INSERT INTO tokens (api_token, service) VALUES (%s, %s)", values=(token, 'eWebinar'),
-                             msg='Token eWebinar already exists',
-                             log_level=10)
                     return 200
                 if resp.status == 401:
                     return 401
                 if resp.status != (200 or 401):
+                    ewebinar_logger.error(msg=f'Check_acc failed with error: [{resp.status}] - {resp.reason}')
                     return 'BAD'
     except Exception as _ex:
         ewebinar_logger.error(msg=f'Check_acc failed with error: {_ex}')
         return 'BAD'
 
 
-async def fetch_registrants(session, cursor=None):
+async def get_all_registrants():
+    count = 1
     tokens = db.query("SELECT api_token FROM tokens WHERE service = 'eWebinar'", fetch='fetchall')
     url = 'https://api.ewebinar.com/v2/registrants'
+    registrants_list = []
     for token in tokens:
         header = {
             'Authorization': f'Bearer {token[0]}'
         }
         params = {}
-        if cursor:
-            params['nextCursor'] = cursor
         try:
-            async with session.get(url, headers=header, params=params) as response:
-                return await response.json()
-        except response.raise_for_status() as _ex:
-            ewebinar_logger.error(msg=f"Error fetching data: {_ex}")
+            while True:
+                async with ClientSession() as session:
+                    async with session.get(url, headers=header, params=params) as response:
+                        try:
+                            data = await response.json()
+                            for registrant in data['registrants']:
+                                registrants_list.append([registrant.get('actions', None),
+                                                        registrant.get('addToCalendarLink', None),
+                                                        registrant.get('allWebinarsLink', None),
+                                                        registrant.get('attended', None),
+                                                        registrant.get('chatsSent', None),
+                                                        registrant.get('city', None),
+                                                        registrant.get('country', None),
+                                                        registrant.get('deviceTypeWhenRegistered', None),
+                                                        registrant.get('deviceTypeWhenWatching', None),
+                                                        registrant.get('email', None),
+                                                        registrant.get('emailVerified', None),
+                                                        registrant.get('firstName', None),
+                                                        registrant.get('firstOrigin', None),
+                                                        registrant.get('firstReferrer', None),
+                                                        registrant.get(str(registrant.keys()).startswith('httpsdrivegoogle'), None),
+                                                        registrant.get('id', None),
+                                                        registrant.get('ip', None),
+                                                        registrant.get('joinedTime', None),
+                                                        registrant.get('joinLink', None),
+                                                        registrant.get('lastName', None),
+                                                        registrant.get('leftTime', None),
+                                                        registrant.get('likes', None),
+                                                        registrant.get('name', None),
+                                                        registrant.get('neurographicsCourse', None),
+                                                        registrant.get('origin', None),
+                                                        registrant.get('referrer', None),
+                                                        registrant.get('registeredTime', None),
+                                                        registrant.get('registrationLink', None),
+                                                        registrant.get('replayLink', None),
+                                                        registrant.get('sessionTime', None),
+                                                        registrant.get('sessionType', None),
+                                                        registrant.get('source', None),
+                                                        registrant.get('state', None),
+                                                        registrant.get('subscribed', None),
+                                                        registrant.get('timezone', None),
+                                                        registrant.get('totalWatchedPercent', None),
+                                                        registrant.get('utm_campaign', None),
+                                                        registrant.get('utm_content', None),
+                                                        registrant.get('utm_medium', None),
+                                                        registrant.get('utm_source', None),
+                                                        registrant.get('utm_term', None),
+                                                        registrant.get('watchedScheduledPercent', None),
+                                                        registrant.get('webinarId', None),
+                                                        registrant.get('webinarTitle', None)])
+                            if data['nextCursor']:
+                                params['nextCursor'] = data['nextCursor']
+                                count += 1
+                            else:
+                                break
 
+                        except Exception as _ex:
+                            ewebinar_logger.error(msg=f'Fetch registrants failed with error: {_ex} | status: {response.status}')
+                            break
 
-async def get_all_registrants(user_id='reserved_ewebinar'):
-    next_cursor = None
-    item = 0
-    async with ClientSession() as session:
-        while True:
-            data = await fetch_registrants(session, next_cursor)
-            registrants = (data.get('registrants', []))
-            next_cursor = data.get('nextCursor')
+            new_registrants_list = [tuple([None if elem == '' else str(elem).encode('utf-8').decode('utf-8')
+                                           for elem in item]) for item in registrants_list]
 
-            if not next_cursor:
-                break
+            ewebinar_db.query("""INSERT INTO ewebinar 
+            (actions, addToCalendarLink, allWebinarsLink, attended, chatsSent, city, country, deviceTypeWhenRegistered, 
+            deviceTypeWhenWatching, email, emailVerified, firstName, firstOrigin, firstReferrer, httpsdrivegoogle, id, ip, 
+            joinedTime, joinLink, lastName, leftTime, likes, name, neurographicsCourse, origin, referrer, registeredTime, 
+            registrationLink, replayLink, sessionTime, sessionType, source, state, subscribed, timezone, 
+            totalWatchedPercent, utm_campaign, utm_content, utm_medium, utm_source, utm_term, watchedScheduledPercent, 
+            webinarId, webinarTitle)
+            VALUES 
+            (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
+            ON CONFLICT DO NOTHING""",
+                     values=new_registrants_list, execute_many=True, debug=True)
 
-            for registrant in registrants:
-                try:
-                    os.mkdir(os.path.abspath(f'../Meta/API_SCRIPTS/temp/{user_id}'))
-                    os.mkdir(os.path.abspath(f'../Meta/temp/{user_id}'))
-                except:
-                    pass
-                ewebinar_db.query("""INSERT INTO ewebinar (id, firstName, lastName, name, email, subscribed, registrationLink, replayLink, 
-                joinLink, addToCalendarLink, timezone, sessionType, registeredTime, sessionTime, joinedTime, leftTime, attended, 
-                likes, watchedPercent, watchedScheduledPercent, watchedReplayPercent, purchaseAmount, converted, tags, referrer, 
-                origin, utm_source, utm_medium, utm_campaign, utm_term, utm_content, gclid, ip, city, country, source) 
-                VALUES 
-                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,  
-                %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""",
-                         values=(
-                             registrant.get('id', ''),
-                             unidecode.unidecode(registrant.get('firstName', '')),
-                             unidecode.unidecode(registrant.get('lastName', '')),
-                             unidecode.unidecode(registrant.get('name', '')),
-                             registrant.get('email', ''),
-                             registrant.get('subscribed', ''),
-                             registrant.get('registrationLink', ''),
-                             registrant.get('replayLink', ''),
-                             registrant.get('joinLink', ''),
-                             registrant.get('addToCalendarLink', ''),
-                             registrant.get('timezone', ''),
-                             registrant.get('sessionType', ''),
-                             registrant.get('registeredTime', None),
-                             registrant.get('sessionTime', None),
-                             registrant.get('joinedTime', None),
-                             registrant.get('leftTime', None),
-                             registrant.get('attended', None),
-                             registrant.get('likes', 0),
-                             registrant.get('watchedPercent', 0.0),
-                             registrant.get('watchedScheduledPercent', 0.0),
-                             registrant.get('watchedReplayPercent', 0.0),
-                             registrant.get('purchaseAmount', 0.0),
-                             registrant.get('converted', False),
-                             registrant.get('tags', []),
-                             registrant.get('referrer', ''),
-                             registrant.get('origin', ''),
-                             registrant.get('utm_source', ''),
-                             registrant.get('utm_medium', ''),
-                             registrant.get('utm_campaign', ''),
-                             registrant.get('utm_term', ''),
-                             registrant.get('utm_content', ''),
-                             registrant.get('gclid', ''),
-                             registrant.get('ip', ''),
-                             registrant.get('city', ''),
-                             registrant.get('country', ''),
-                             registrant.get('source', '')
-                         ))
+            ewebinar_db.query(query="""DELETE FROM ewebinar
+                        WHERE ctid NOT IN (
+                            SELECT MIN(ctid)
+                            FROM ewebinar
+                            GROUP BY actions, addToCalendarLink, allWebinarsLink, attended, chatsSent, city, country, 
+                            deviceTypeWhenRegistered, deviceTypeWhenWatching, email, emailVerified, firstName, 
+                            firstOrigin, firstReferrer, httpsdrivegoogle, id, ip, joinedTime, joinLink, lastName, 
+                            leftTime, likes, name, neurographicsCourse, origin, referrer, registeredTime, registrationLink, 
+                            replayLink, sessionTime, sessionType, source, state, subscribed, timezone, 
+                            totalWatchedPercent, utm_campaign, utm_content, utm_medium, utm_source, utm_term, 
+                            watchedScheduledPercent, webinarId, webinarTitle
+                        );""")
 
-                ewebinar_db.query(query="""DELETE FROM ewebinar
-                            WHERE ctid NOT IN (
-                                SELECT MIN(ctid)
-                                FROM ewebinar
-                                GROUP BY id, firstName, lastName, name, email, subscribed, registrationLink, replayLink, 
-                joinLink, addToCalendarLink, timezone, sessionType, registeredTime, sessionTime, joinedTime, leftTime, attended, 
-                likes, watchedPercent, watchedScheduledPercent, watchedReplayPercent, purchaseAmount, converted, tags, 
-                referrer, origin, utm_source, utm_medium, utm_campaign, utm_term, utm_content, gclid, ip, city, country, source
-                            );""")
+            ewebinar_logger.info(msg=f'Fetch registrants query successfully ended with {count} registrants')
+        except Exception as _ex:
+            ewebinar_logger.error(msg=f'Registrants failed with error: {_ex}')
 
-                file_pattern = f'../Meta/API_SCRIPTS/temp/{user_id}/ewebinar_report_{datetime.datetime.today().strftime('%Y-%m-%d')}_*.csv'
-                filename = os.path.abspath(
-                    f'../Meta/API_SCRIPTS/temp/{user_id}/ewebinar_report_{datetime.datetime.today().strftime('%Y-%m-%d')}_{item}.csv')
-                filename_2 = os.path.abspath(
-                    f'../Meta/temp/{user_id}/ewebinar_report_{datetime.datetime.today().strftime('%Y-%m-%d')}.csv')
-
-                with open(filename, mode='w', newline='', encoding='utf-8') as csvfile:
-                    fieldnames = [
-                        'id', 'firstName', 'lastName', 'name', 'email',
-                        'subscribed', 'registrationLink', 'replayLink', 'joinLink',
-                        'addToCalendarLink', 'timezone', 'sessionType',
-                        'registeredTime', 'sessionTime', 'joinedTime',
-                        'leftTime', 'attended', 'likes', 'watchedPercent',
-                        'watchedScheduledPercent', 'watchedReplayPercent',
-                        'purchaseAmount', 'converted', 'tags',
-                        'referrer', 'origin', 'utm_source',
-                        'utm_medium', 'utm_campaign', 'utm_term',
-                        'utm_content', 'gclid', 'ip', 'city',
-                        'country', 'source'
-                    ]
-
-                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-                    writer.writeheader()
-
-                    writer.writerow({
-                        'id': registrant.get('id', ''),
-                        'firstName': unidecode.unidecode(registrant.get('firstName', '')),
-                        'lastName': unidecode.unidecode(registrant.get('lastName', '')),
-                        'name': unidecode.unidecode(registrant.get('name', '')),
-                        'email': registrant.get('email', ''),
-                        'subscribed': registrant.get('subscribed', ''),
-                        'registrationLink': registrant.get('registrationLink', ''),
-                        'replayLink': registrant.get('replayLink', ''),
-                        'joinLink': registrant.get('joinLink', ''),
-                        'addToCalendarLink': registrant.get('addToCalendarLink', ''),
-                        'timezone': registrant.get('timezone', ''),
-                        'sessionType': registrant.get('sessionType', ''),
-                        'registeredTime': registrant.get('registeredTime', None),
-                        'sessionTime': registrant.get('sessionTime', None),
-                        'joinedTime': registrant.get('joinedTime', None),
-                        'leftTime': registrant.get('leftTime', None),
-                        'attended': registrant.get('attended', None),
-                        'likes': registrant.get('likes', 0),
-                        'watchedPercent': registrant.get('watchedPercent', 0.0),
-                        'watchedScheduledPercent': registrant.get('watchedScheduledPercent', 0.0),
-                        'watchedReplayPercent': registrant.get('watchedReplayPercent', 0.0),
-                        'purchaseAmount': registrant.get('purchaseAmount', 0.0),
-                        'converted': registrant.get('converted', False),
-                        'tags': registrant.get('tags', []),
-                        'referrer': registrant.get('referrer', ''),
-                        'origin': registrant.get('origin', ''),
-                        'utm_source': registrant.get('utm_source', ''),
-                        'utm_medium': registrant.get('utm_medium', ''),
-                        'utm_campaign': registrant.get('utm_campaign', ''),
-                        'utm_term': registrant.get('utm_term', ''),
-                        'utm_content': registrant.get('utm_content', ''),
-                        'gclid': registrant.get('gclid', ''),
-                        'ip': registrant.get('ip', ''),
-                        'city': registrant.get('city', ''),
-                        'country': registrant.get('country', ''),
-                        'source': registrant.get('source', '')
-                    })
-
-                item += 1
-
-    try:
-        file_list = glob.glob(file_pattern)
-        with open(filename_2, 'w', encoding='utf-8') as out:
-            for file_name in file_list:
-                with open(file_name, 'r', encoding='utf-8') as infile:
-                    out.write(infile.read())
-        shutil.rmtree(os.path.abspath(f'../Meta/API_SCRIPTS/temp/{user_id}'))
-    except Exception as _ex:
-        ewebinar_logger.error(msg=f'CSV write canceled with error: {_ex}')
 
