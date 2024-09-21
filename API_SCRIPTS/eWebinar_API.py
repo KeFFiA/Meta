@@ -117,7 +117,7 @@ async def get_all_registrants():
             (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
             ON CONFLICT DO NOTHING""",
-                     values=new_registrants_list, execute_many=True, debug=True)
+                     values=new_registrants_list, execute_many=True)
 
             ewebinar_db.query(query="""DELETE FROM ewebinar
                         WHERE ctid NOT IN (
