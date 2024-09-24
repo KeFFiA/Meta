@@ -740,7 +740,11 @@ async def scheduler_add_st_2(call: CallbackQuery, state: FSMContext):
         await state.set_state(SchedulerList.task)
 
     if call.data == 'done':
-        temp_dir = os.path.abspath(f'./temp/')
+        try:
+            os.mkdir('./temp/')
+        except FileExistsError:
+            pass
+        temp_dir = os.path.abspath('./temp/')
         file_name = os.path.join(temp_dir, f'{data['choose']}_scheduler.json')
         try:
             with open(file_name, 'r') as file:
@@ -749,34 +753,44 @@ async def scheduler_add_st_2(call: CallbackQuery, state: FSMContext):
                 except json.JSONDecodeError as _ex:
                     await call.message.edit_text(dialogs.RU_ru['scheduler']['scheduler_add_error'])
                     await sleep(5)
+                    await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
+                    admin_handlers_logger.error(msg=f'Add scheduler failed with error: {_ex}')
+
+                counter = 1
+                text = ''
+                try:
+                    for item in file_data:
+                        scheduler = f'{data['choose']}_scheduler_{counter}'
+                        time = item[scheduler]
+                        await add_job(scheduler, time)
+                        text += f'{scheduler} - {time}\n\n'
+                        counter += 1
+                except Exception as _ex:
+                    await state.clear()
+                    await call.message.edit_text(dialogs.RU_ru['scheduler']['scheduler_add_error_None'])
+                    await sleep(5)
                     keyboard = create_schedulers_add_keyboard()
-                    await call.message.answer(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
-                    admin_handlers_logger.error(msg=_ex)
+                    await call.message.edit_text(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
+
+                with open(file_name, 'w') as f:
+                    f.write('')
+
+                await call.message.edit_text(text=f'{dialogs.RU_ru['scheduler']['scheduler_add_done']}{text}')
+                await sleep(5)
+                await state.clear()
+                await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
 
         except FileNotFoundError as _ex:
             await call.message.edit_text(dialogs.RU_ru['scheduler']['scheduler_add_error'])
             await sleep(5)
-            keyboard = create_schedulers_add_keyboard()
-            await call.message.answer(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
-            admin_handlers_logger.error(msg=_ex)
-        counter = 1
-        text = ''
-        for item in file_data:
-            scheduler = f'{data['choose']}_scheduler_{counter}'
-            time = item[scheduler]
-            await add_job(scheduler, time)
-            text += f'{scheduler} - {time}\n\n'
-            counter += 1
-
-        with open(file_name, 'w') as f:
-            f.write('')
-
-        await call.message.edit_text(text=f'{dialogs.RU_ru['scheduler']['scheduler_add_done']}{text}')
-        await sleep(5)
-        await state.clear()
-        await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
+            await call.message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
+            admin_handlers_logger.error(msg=f'Add scheduler failed with error: {_ex}')
 
     if call.data == 'scheduler1_back':
+        try:
+            os.mkdir('./temp/')
+        except FileExistsError:
+            pass
         temp_dir = os.path.abspath(f'./temp/')
         file_name = os.path.join(temp_dir, f'{data['choose']}_scheduler.json')
         with open(file_name, 'w') as f:
