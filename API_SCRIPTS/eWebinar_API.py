@@ -1,10 +1,3 @@
-# import csv
-# import datetime
-# import glob
-# import os
-# import shutil
-# import unidecode
-
 from aiohttp import ClientSession
 
 from Database.database import ewebinar_db, db
@@ -93,9 +86,9 @@ async def get_all_registrants():
                                                         registrant.get('watchedScheduledPercent', None),
                                                         registrant.get('webinarId', None),
                                                         registrant.get('webinarTitle', None)])
+                                count += 1
                             if data['nextCursor']:
                                 params['nextCursor'] = data['nextCursor']
-                                count += 1
                             else:
                                 break
 
@@ -132,7 +125,8 @@ async def get_all_registrants():
                             watchedScheduledPercent, webinarId, webinarTitle
                         );""")
 
-            ewebinar_logger.info(msg=f'Fetch registrants query successfully ended with {count} registrants')
+            ewebinar_logger.info(msg=f'Fetch registrants query successfully ended with ~{count*50} registrants')
+            return True
         except Exception as _ex:
             ewebinar_logger.error(msg=f'Registrants failed with error: {_ex}')
 

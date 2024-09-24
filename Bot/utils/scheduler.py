@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from API_SCRIPTS.Facebook_API import reports_which_is_active
-from API_SCRIPTS.GetCourse_API import getcourse_users_report
+from API_SCRIPTS.GetCourse_API import getcourse_report
 from API_SCRIPTS.eWebinar_API import get_all_registrants
 from Database.database import db
 
@@ -60,7 +60,7 @@ async def ewebinar_reports_job(job_id):
 
 async def getcourse_reports_job(job_id):
     try:
-        await getcourse_users_report()
+        await getcourse_report()
         scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
     except Exception as e:
         scheduler_logger.error(f"Error executing job {job_id}: {e}")

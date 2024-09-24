@@ -338,6 +338,100 @@ create_getcourse_users_table =  """
     """
 
 
+create_getcourse_deals_table = """
+    CREATE TABLE IF NOT EXISTS getcourse_deals (
+        Order_ID TEXT,
+        Number TEXT,
+        User_ID TEXT,
+        Username TEXT,
+        Email TEXT,
+        Phone TEXT,
+        Creation_Date TEXT,
+        Payment_Date TEXT,
+        Title TEXT,
+        Status TEXT,
+        Cost_RUB TEXT,
+        Paid TEXT,
+        Payment_System_Fee TEXT,
+        Received TEXT,
+        Tax TEXT,
+        Remaining_After_Deducting_Payment_System_Fee_and_Tax TEXT,
+        Other_Fees TEXT,
+        Earned TEXT,
+        Currency TEXT,
+        Manager TEXT,
+        City TEXT,
+        Payment_System TEXT,
+        Partner_ID TEXT,
+        Used_Promo_Code TEXT,
+        Promotion TEXT,
+        Partner_Evgeny_Schneider TEXT,
+        Code_Word TEXT,
+        Club_Opening_Date TEXT,
+        Payment_Date_1st_Payment TEXT,
+        second_Payment_Date TEXT,
+        third_Payment_Date TEXT,
+        utm_source TEXT,
+        utm_medium TEXT,
+        utm_campaign TEXT,
+        utm_content TEXT,
+        utm_term TEXT,
+        Active_Messenger TEXT,
+        sb_id TEXT,
+        gcpc TEXT,
+        fun TEXT,
+        gcmlg TEXT,
+        Order_Creation_Page TEXT,
+        number_manager TEXT,
+        time_web TEXT,
+        date_web TEXT,
+        time_left TEXT,
+        replay_web TEXT,
+        Order_Partner_ID TEXT,
+        Order_Partner_Email TEXT,
+        Order_Partner_Full_Name TEXT,
+        User_Partner_ID TEXT,
+        User_Partner_Email TEXT,
+        User_Partner_Full_Name TEXT,
+        utm_source_2 TEXT,
+        utm_medium_2 TEXT,
+        utm_campaign_2 TEXT,
+        utm_content_2 TEXT,
+        utm_term_2 TEXT,
+        utm_group TEXT,
+        Affiliate_Source TEXT,
+        Affiliate_Code TEXT,
+        Affiliate_Session TEXT,
+        user_utm_source TEXT,
+        user_utm_medium TEXT,
+        user_utm_campaign TEXT,
+        user_utm_content TEXT,
+        user_utm_term TEXT,
+        user_utm_group TEXT,
+        user_gcpc TEXT,
+        Tags TEXT,
+        Offer_Tags TEXT
+    );
+    """
+
+create_getcourse_payments_table = """
+    CREATE TABLE IF NOT EXISTS getcourse_payments (
+        Number TEXT,
+        Username TEXT,
+        Email TEXT,
+        Orders TEXT,
+        Creation_Date TEXT,
+        Type TEXT,
+        Status TEXT,
+        Amount TEXT,
+        Fees TEXT,
+        Received TEXT,
+        Payment_Code TEXT,
+        Title TEXT
+    );
+    """
+
+
 db.query(query=create_users_table)
 db.query(query=create_white_list_table)
 db.query(query=create_tokens_table)
@@ -346,3 +440,5 @@ db.query(query=create_reports_table_query)
 db.query(query=create_scheduler_table)
 ewebinar_db.query(query=create_ewebinar_table)
 getcourse_db.query(query=create_getcourse_users_table)
+getcourse_db.query(query=create_getcourse_deals_table)
+getcourse_db.query(query=create_getcourse_payments_table)
