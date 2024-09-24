@@ -117,12 +117,11 @@ async def get_all_registrants():
                             SELECT MIN(ctid)
                             FROM ewebinar
                             GROUP BY actions, addToCalendarLink, allWebinarsLink, attended, chatsSent, city, country, 
-                            deviceTypeWhenRegistered, deviceTypeWhenWatching, email, emailVerified, firstName, 
-                            firstOrigin, firstReferrer, httpsdrivegoogle, id, ip, joinedTime, joinLink, lastName, 
-                            leftTime, likes, name, neurographicsCourse, origin, referrer, registeredTime, registrationLink, 
-                            replayLink, sessionTime, sessionType, source, state, subscribed, timezone, 
-                            totalWatchedPercent, utm_campaign, utm_content, utm_medium, utm_source, utm_term, 
-                            watchedScheduledPercent, webinarId, webinarTitle
+                            deviceTypeWhenRegistered, deviceTypeWhenWatching, email, emailVerified, firstName, firstOrigin, 
+                            firstReferrer, httpsdrivegoogle, id, ip, joinedTime, joinLink, lastName, leftTime, likes, name, 
+                            neurographicsCourse, origin, referrer, registeredTime, registrationLink, replayLink, sessionTime, 
+                            sessionType, source, state, subscribed, timezone, totalWatchedPercent, utm_campaign, utm_content, 
+                            utm_medium, utm_source, utm_term, watchedScheduledPercent, webinarId, webinarTitle
                         );""")
 
             ewebinar_logger.info(msg=f'Fetch registrants query successfully ended with ~{count*50} registrants')
