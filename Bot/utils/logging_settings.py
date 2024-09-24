@@ -1,6 +1,14 @@
 import logging.config
 import logging
-import os.path
+import os
+
+path = os.path.abspath('../Logs/log.log')
+
+try:
+    os.mkdir('../Logs/')
+    open(path, 'a').close()
+except FileExistsError:
+    pass
 
 LOGGING_CONFIG = {
     'version': 1,
@@ -21,7 +29,7 @@ LOGGING_CONFIG = {
         'rotating_files_handler': {
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'default_formatter',
-            'filename': os.path.abspath('../Meta/Logs/log.log'),
+            'filename': path,
             'encoding': 'UTF-8',
             'maxBytes': 1000000,
             'backupCount': 3,
