@@ -38,10 +38,6 @@ async def add_job(job_id, time):
         pass
 
 
-async def get_jobs():
-    return db.query(query='SELECT job_id, time FROM scheduled_jobs ORDER BY job_id', fetch='fetchall')
-
-
 async def facebook_reports_job(job_id):
     try:
         await reports_which_is_active()
@@ -66,6 +62,9 @@ async def getcourse_reports_job(job_id):
         scheduler_logger.error(f"Error executing job {job_id}: {e}")
 
 
+async def get_jobs():
+    return db.query(query='SELECT job_id, time FROM scheduled_jobs ORDER BY job_id', fetch='fetchall')
+
 async def load_jobs():
     scheduled_jobs = await get_jobs()
     try:
@@ -79,15 +78,16 @@ async def load_jobs():
                 continue
 
             if job_id.startswith('facebook_'):
-                scheduler.add_job(facebook_reports_job, 'cron', hour=hour, minute=minute, args=[job_id],
+                scheduler.add_job(facebook_reports_job, 'cron', hour=hour, minute=minute, args=(job_id,),
                                   id=job_id, replace_existing=True)
             elif job_id.startswith('ewebinar_'):
-                scheduler.add_job(ewebinar_reports_job, 'cron', hour=hour, minute=minute, args=[job_id],
+                scheduler.add_job(ewebinar_reports_job, 'cron', hour=hour, minute=minute, args=(job_id,),
                                   id=job_id, replace_existing=True)
             elif job_id.startswith('getcourse_'):
-                scheduler.add_job(getcourse_report, 'cron', hour=hour, minute=minute, args=[job_id],
+                scheduler.add_job(getcourse_report, 'cron', hour=hour, minute=minute, args=(job_id,),
                                   id=job_id, replace_existing=True)
 
         scheduler_logger.info('Jobs loaded correctly.')
     except Exception as _ex:
         scheduler_logger.error(f'Failed to load jobs\n{_ex}')
+
