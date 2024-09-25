@@ -84,6 +84,9 @@ async def load_jobs():
             elif job_id.startswith('ewebinar_'):
                 scheduler.add_job(ewebinar_reports_job, 'cron', hour=hour, minute=minute, args=[job_id],
                                   id=job_id, replace_existing=True)
+            elif job_id.startswith('getcourse_'):
+                scheduler.add_job(getcourse_report, 'cron', hour=hour, minute=minute, args=[job_id],
+                                  id=job_id, replace_existing=True)
 
         scheduler_logger.info('Jobs loaded correctly.')
     except Exception as _ex:

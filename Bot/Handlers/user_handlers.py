@@ -1,8 +1,6 @@
 import asyncio
-import datetime
 import os
-import shutil
-from asyncio import sleep
+from asyncio import sleep, create_task
 
 from aiogram import Router, Bot, F, flags
 from aiogram.filters import Command
@@ -65,18 +63,22 @@ async def fast_report(call: CallbackQuery):
 @user_router.callback_query(F.data == 'fast_report_all')
 async def fast_report_all(call: CallbackQuery):
     await call.message.edit_text(text=dialogs.RU_ru['wait_long'], reply_markup=create_menu_keyboard())
-    res_1 = await reports_which_is_active()
-    res_2 = await get_all_registrants()
-    res_3 = await getcourse_report()
+    task_1 = create_task(reports_which_is_active())
+    task_2 = create_task(get_all_registrants())
+    task_3 = create_task(getcourse_report())
+
     time_sleep = 1505
+
     while time_sleep > 0:
-        if res_1 and res_2 and res_3:
-            await call.message.answer(text=dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
+        if task_1.done() and task_2.done() and task_3.done():
+            await call.message.answer(text=f'{call.from_user.first_name} {dialogs.RU_ru["fast_report_ok"]}',
+                                      reply_markup=create_menu_keyboard())
             break
         else:
             await asyncio.sleep(10)
             time_sleep -= 10
-            if time_sleep == 5:
+
+            if time_sleep <= 5:
                 await call.message.answer(text=dialogs.RU_ru['fast_report_bad'], reply_markup=create_menu_keyboard())
                 break
 

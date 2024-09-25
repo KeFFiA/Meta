@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import certifi
 import requests
+import threading
 from aiohttp import ClientSession
 
 from Database.database import db
@@ -182,7 +183,7 @@ async def reports_which_is_active():
                 GROUP BY account_name, account_id, campaign_name, campaign_id, adset_name, adset_id, ad_name, ad_id,
                 impressions, frequency, clicks, unique_clicks, spend, reach, cpp, cpm, unique_link_clicks_ctr, ctr,
                 unique_ctr, cpc, cost_per_unique_click, objective, buying_type, created_time, date_start, date_stop
-            );""")
+            );""", debug=True)
     return True
 
 
