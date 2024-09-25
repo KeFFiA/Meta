@@ -19,10 +19,6 @@ async def check_acc_getcourse(token, account_name):
         async with ClientSession() as session:
             async with session.get(url, params=params) as resp:
                 if resp.status == 200:
-                    db.query("INSERT INTO tokens (api_token, service, account_name) VALUES (%s, %s, %s)",
-                             values=(token, 'GetCourse', account_name),
-                             msg='Token GetCourse already exists',
-                             log_level=10)
                     return 200
                 if resp.status == 401:
                     return 401

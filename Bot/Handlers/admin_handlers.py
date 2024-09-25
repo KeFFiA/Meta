@@ -10,6 +10,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import config
 from API_SCRIPTS.Facebook_API import check_adacc_facebook
+from API_SCRIPTS.GetCourse_API import check_acc_getcourse
 from API_SCRIPTS.eWebinar_API import check_acc_ewebinar
 from Bot import dialogs
 from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, create_token_list_keyboard, \
@@ -56,18 +57,26 @@ async def add_token_cmd(message: Message, command: CommandObject):
         )
         return
     try:
+        items = command.args.split(" ", maxsplit=3)
+        if len(items) < 3:
+            service = items[0]
+            token = items[1]
+            acc_name = None
+        else:
+            service = items[0]
+            acc_name = items[1]
+            token = items[2]
         try:
-            service, token = command.args.split(" ", maxsplit=2)
             if service.lower() == "facebook":
                 res = check_adacc_facebook(token)
             elif service.lower() == "getcourse":
-                res = check_acc_ewebinar(token)
+                res = await check_acc_getcourse(token, acc_name)
             elif service.lower() == "ewebinar":
                 res = await check_acc_ewebinar(token)
 
             if res == 200:
-                if db.query(query="INSERT INTO tokens (api_token, service) VALUES (%s, %s)",
-                            values=(token, service)) == 'Success':
+                if db.query(query="INSERT INTO tokens (api_token, service, account_name) VALUES (%s, %s, %s)",
+                            values=(token, service, acc_name)) == 'Success':
                     await message.answer(f'Токен {service} добавлен!')
                 else:
                     await message.answer('Токен уже добавлен')
