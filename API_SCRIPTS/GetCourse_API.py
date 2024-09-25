@@ -58,7 +58,6 @@ async def getcourse_report():
                     async with session.get(url, params=params) as response:
                         data = await response.json()
                         await getcourse_payments_report(account_name=account_name, params=params, data=data)
-
         return True
 
 
@@ -95,7 +94,7 @@ async def getcourse_users_report(account_name, params, data):
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                     %s, %s, %s) ON CONFLICT DO NOTHING;""",
-                                               values=new_item, execute_many=True, debug=True)
+                                               values=new_item, execute_many=True)
                 break
             else:
                 await sleep(60)
@@ -120,7 +119,7 @@ async def getcourse_users_report(account_name, params, data):
                         btn_8, web_time, webhook_time_web, btn_9, from_where, utm_source_2, utm_medium_2, 
                         utm_campaign_2, utm_term_2, utm_content_2, utm_group_2, partner_id_2, partner_email_2, 
                         partner_fullname, manager_fullname, vk_id
-                );""", debug=True)
+                );""")
 
 
 async def getcourse_deals_report(account_name, params, data):
@@ -157,7 +156,7 @@ async def getcourse_deals_report(account_name, params, data):
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                             %s, %s) ON CONFLICT DO NOTHING;""",
-                                               values=new_item, execute_many=True, debug=True)
+                                               values=new_item, execute_many=True)
                 break
             else:
                 await sleep(120)
@@ -182,7 +181,7 @@ async def getcourse_deals_report(account_name, params, data):
                             User_Partner_Full_Name, utm_source_2, utm_medium_2, utm_campaign_2, utm_content_2, utm_term_2, 
                             utm_group, Affiliate_Source, Affiliate_Code, Affiliate_Session, user_utm_source, user_utm_medium, 
                             user_utm_campaign, user_utm_content, user_utm_term, user_utm_group, user_gcpc, Tags, Offer_Tags
-                        );""", debug=True)
+                        );""")
 
 
 async def getcourse_payments_report(account_name, params, data):
@@ -205,7 +204,7 @@ async def getcourse_payments_report(account_name, params, data):
                             getcourse_db.query(f"""INSERT INTO getcourse_payments (Number, Username, Email, Orders, 
                             Creation_Date, Type, Status, Amount, Fees, Received, Payment_Code, Title)
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;""",
-                                               values=new_item, execute_many=True, debug=True)
+                                               values=new_item, execute_many=True)
                 break
             else:
                 await sleep(120)
@@ -221,6 +220,6 @@ async def getcourse_payments_report(account_name, params, data):
                                 FROM getcourse_payments
                                 GROUP BY Number, Username, Email, Orders, 
                                          Creation_Date, Type, Status, Amount, Fees, Received, Payment_Code, Title
-                            );""", debug=True)
+                            );""")
 
 

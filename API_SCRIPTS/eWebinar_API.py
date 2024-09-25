@@ -123,7 +123,7 @@ async def get_all_registrants():
                             neurographicsCourse, origin, referrer, registeredTime, registrationLink, replayLink, sessionTime, 
                             sessionType, source, state, subscribed, timezone, totalWatchedPercent, utm_campaign, utm_content, 
                             utm_medium, utm_source, utm_term, watchedScheduledPercent, webinarId, webinarTitle
-                        );""", debug=True)
+                        );""")
 
             ewebinar_logger.info(msg=f'Fetch registrants query successfully ended with ~{count*50} registrants')
             return True
