@@ -32,7 +32,8 @@ async def get_all_registrants():
     registrants_list = []
     for token in tokens:
         header = {
-            'Authorization': f'Bearer {token[0]}'
+            'Authorization': f'Bearer {token[0]}',
+            'Accept': 'application/json',
         }
         params = {}
         try:
