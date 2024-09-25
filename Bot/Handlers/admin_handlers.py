@@ -3,6 +3,7 @@ import os
 from asyncio import sleep
 
 from aiogram import Router, F
+from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
@@ -27,34 +28,26 @@ admin_router = Router()
 @admin_router.message(Command("add_user"))
 async def add_user_cmd(message: Message, command: CommandObject):
     if command.args is None:
-        await message.answer(
-            "Ошибка: не переданы аргументы"
-        )
+        await message.answer(text=dialogs.RU_ru['add_user']['cmd_args_err'], reply_markup=create_menu_keyboard())
         return
     try:
         user_id = command.args.split(" ", maxsplit=1)
 
     except ValueError:
-        await message.answer(
-            "Ошибка: неправильный формат команды. Пример:\n"
-            "/add_user <user_id>"
-        )
+        await message.answer(dialogs.RU_ru['add_user']['value_error'], reply_markup=create_menu_keyboard())
         return
 
-    if db.query(query="INSERT INTO white_list (user_id) VALUES (%s)", values=(user_id[0],)) == 'Success':
+    if db.query(query="INSERT INTO white_list (user_id) VALUES (%s)", values=(user_id[0],),
+                msg=f'User {user_id} already exist', log_level=10) == 'Success':
         await message.answer(f'Пользователь {user_id[0]} добавлен!')
     else:
-        await message.answer('Пользователь уже добавлен или неверно введен ID')
+        await message.answer(dialogs.RU_ru['add_user']['already_exist'], reply_markup=create_menu_keyboard())
 
 
 @admin_router.message(Command("add_token"))
 async def add_token_cmd(message: Message, command: CommandObject):
     if command.args is None:
-        await message.answer(
-            "Ошибка: не переданы аргументы\nПример:\n"
-            "/add_token <service> <token>\nВведите /add_token services для просмотра доступных сервисов",
-            parse_mode='NONE'
-        )
+        await message.answer(text=dialogs.RU_ru['add_token']['cmd_args_err'], reply_markup=create_menu_keyboard())
         return
     try:
         items = command.args.split(" ", maxsplit=3)
@@ -76,30 +69,31 @@ async def add_token_cmd(message: Message, command: CommandObject):
 
             if res == 200:
                 if db.query(query="INSERT INTO tokens (api_token, service, account_name) VALUES (%s, %s, %s)",
-                            values=(token, service, acc_name)) == 'Success':
-                    await message.answer(f'Токен {service} добавлен!')
+                            values=(token, service, acc_name),
+                            msg=f'Token {service} - {token[:15]} already exist',
+                            log_level=10) == 'Success':
+                    await message.answer(f'Токен {service} добавлен!', reply_markup=create_menu_keyboard())
                 else:
-                    await message.answer('Токен уже добавлен')
+                    await message.answer(dialogs.RU_ru['add_token']['already_exist'], reply_markup=create_menu_keyboard())
             elif res == 401:
-                await message.answer(text=dialogs.RU_ru['request_facebook']['401'])
+                await message.answer(text=dialogs.RU_ru['add_token']['401'], reply_markup=create_menu_keyboard())
             else:
-                await message.answer(text=dialogs.RU_ru['request_facebook']['else'],
+                await message.answer(text=dialogs.RU_ru['add_token']['else'],
                                      reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                                          [
-                                             InlineKeyboardButton(url=f'tg://user?id={config.developer_id}', text='Написать')
+                                             InlineKeyboardButton(url=f'tg://user?id={config.developer_id}',
+                                                                  text=dialogs.RU_ru['navigation']['write']),
                                          ]
                                      ]))
+                await sleep(5)
+                await message.answer(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
         except:
             service = command.args
             if service == 'services':
                 await message.answer(text=dialogs.RU_ru['help_services'])
 
     except ValueError:
-        await message.answer(
-            "Ошибка: неправильный формат команды. Пример:\n"
-            "/add_token <service> <token>\nВведите /add_token services для просмотра доступных сервисов",
-            parse_mode='NONE'
-        )
+        await message.answer(text=dialogs.RU_ru['add_token']['value_error'], reply_markup=create_menu_keyboard())
         return
 
 
@@ -114,43 +108,65 @@ async def token_cmd(message: Message, state: FSMContext):
 async def token_list_press_token(call: CallbackQuery, state: FSMContext):
     await state.update_data(token_id=None)
     token_id = call.data.removeprefix('token_')
-    token = db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=token_id, fetch='fetchone')[0]
+    service = db.query("SELECT service FROM tokens WHERE id = %s", values=token_id, fetch='fetchone')[0]
+    if service.lower() == 'facebook':
+        token = db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=token_id, fetch='fetchone')[0]
 
-    await state.update_data(token_id=token_id)
-    token_accounts = list(
-        db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
-                 values=(token,), fetch='fetchall'))
-    text = ''
-    count = 1
-    builder = InlineKeyboardBuilder()
-    buttons = []
-    for items in token_accounts:
-        acc_name, acc_id, is_active = items
-        if is_active:
-            active = 'true'
+        await state.update_data(token_id=token_id)
+        token_accounts = list(
+            db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
+                     values=(token,), fetch='fetchall'))
+        text = ''
+        count = 1
+        builder = InlineKeyboardBuilder()
+        buttons = []
+        for items in token_accounts:
+            acc_name, acc_id, is_active = items
+            if is_active:
+                active = 'true'
+            else:
+                active = 'false'
+            text += f"""\n\n{count}. {dialogs.RU_ru['adaccount']['name']} {acc_name}
+    {dialogs.RU_ru['adaccount']['id']} {acc_id}
+    {dialogs.RU_ru['adaccount']['reports']} {dialogs.RU_ru['adaccount']['is_active'][f'{active}']}"""
+            try:
+                buttons.append(InlineKeyboardButton(
+                    text=str(count),
+                    callback_data=acc_id
+                ))
+            except:
+                pass
+
+            count += 1
+
+        builder.row(*buttons, width=3)
+        last_btn = InlineKeyboardButton(callback_data='act_back_to_token', text=dialogs.RU_ru['navigation']['back'])
+        last_btns = InlineKeyboardMarkup(inline_keyboard=[[last_btn]])
+        builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
+        keyboard = builder.as_markup()
+
+        await call.message.edit_text(text=text, reply_markup=keyboard)
+        await state.set_state(AdaccountsList.acc)
+    elif service.lower() == 'youtube':
+        pass
+    else:
+        token, service, account_name, is_active = db.query(
+            query="SELECT api_token, service, account_name, is_active FROM tokens WHERE id=%s",
+            values=token_id, fetch='fetchone')
+        if account_name is None:
+            await call.message.edit_text(text=f"""*{service}*
+        
+*{dialogs.RU_ru['adaccount']['id']}* {token[:40]}...
+*{dialogs.RU_ru['adaccount']['reports']}* {dialogs.RU_ru['adaccount']['is_active'][str(is_active).lower()]}""",
+                                         parse_mode='MARKDOWN')
         else:
-            active = 'false'
-        text += f"""\n\n{count}. {dialogs.RU_ru['adaccount']['name']} {acc_name}
-{dialogs.RU_ru['adaccount']['id']} {acc_id}
-{dialogs.RU_ru['adaccount']['reports']} {dialogs.RU_ru['adaccount']['is_active'][f'{active}']}"""
-        try:
-            buttons.append(InlineKeyboardButton(
-                text=str(count),
-                callback_data=acc_id
-            ))
-        except:
-            pass
+            await call.message.edit_text(text=f"""*{service}*
 
-        count += 1
+*{dialogs.RU_ru['adaccount']['name']}* {account_name}
+*{dialogs.RU_ru['adaccount']['id']}* {token[:40]}...
+*{dialogs.RU_ru['adaccount']['reports']}* {dialogs.RU_ru['adaccount']['is_active'][str(is_active).lower()]}""",
+                                         parse_mode='MARKDOWN')
 
-    builder.row(*buttons, width=3)
-    last_btn = InlineKeyboardButton(callback_data='act_back_to_token', text=dialogs.RU_ru['navigation']['back'])
-    last_btns = InlineKeyboardMarkup(inline_keyboard=[[last_btn]])
-    builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
-    keyboard = builder.as_markup()
-
-    await call.message.edit_text(text=text, reply_markup=keyboard)
-    await state.set_state(AdaccountsList.acc)
 
 
 @admin_router.callback_query(F.data.startswith('act_'), AdaccountsList.acc)
@@ -611,7 +627,7 @@ async def white_choose(call: CallbackQuery, state: FSMContext):
     if choose == 'white_btn_delete_from_white_list':
         db.query(query="DELETE FROM white_list WHERE user_id=%s",
                  values=(int(data['user_id']),))
-        await call.answer(text='Пользователь удален', show_alert=True)
+        await call.answer(text=dialogs.RU_ru['user']['actions']['deleted'], show_alert=True)
         await state.update_data(user_id='', user_data='')
         keyboard = create_white_list_keyboard()
         await call.message.edit_text(dialogs.RU_ru['white_list'], reply_markup=keyboard)

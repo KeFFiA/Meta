@@ -17,6 +17,7 @@ from Bot.dialogs import commands
 from Bot.utils.States import WhiteList
 from Database.database import db
 from Bot.bot_keyboards.inline_keyboards import create_fast_report_which_keyboard
+from bot_keyboards.inline_keyboards import create_tokens_2_help_keyboard
 
 user_router = Router()
 
@@ -24,15 +25,14 @@ user_router = Router()
 @user_router.message(Command("start"))
 async def start_cmd(message: Message, bot: Bot, state: FSMContext):
     await bot.set_my_commands(commands=commands)
-    await message.answer(message.from_user.full_name + dialogs.RU_ru['/start_success'],
-                         reply_markup=create_menu_keyboard())
+    await message.answer(message.from_user.full_name + dialogs.RU_ru['/start_success'])
     db.query(
         query="INSERT INTO users (user_id, username, user_name, user_surname) VALUES (%s, %s, %s, %s)",
         values=(
             message.from_user.id, message.from_user.username, message.from_user.first_name,
             message.from_user.last_name,),
         log_level=10,
-        msg=f'Пользователь {message.from_user.id} уже записан')
+        msg=f'User {message.from_user.id} already exist')
     await state.clear()
 
 
@@ -44,8 +44,7 @@ async def menu_cmd(message: Message, state: FSMContext):
 
 @user_router.message(Command("white_list"))
 async def white_list_cmd(message: Message, state: FSMContext):
-    keyboard = create_white_list_keyboard()
-    await message.answer(text=dialogs.RU_ru['white_list'], reply_markup=keyboard)
+    await message.answer(text=dialogs.RU_ru['white_list'], reply_markup=create_white_list_keyboard())
     await state.set_state(WhiteList.user)
 
 
@@ -85,12 +84,12 @@ async def fast_report_all(call: CallbackQuery):
 
 @user_router.callback_query(F.data == 'fast_report_facebook')
 async def fast_report_facebook(call: CallbackQuery):
-    await call.message.edit_text(text=dialogs.RU_ru['wait'])
+    await call.message.edit_text(text=dialogs.RU_ru['wait'], reply_markup=create_menu_keyboard())
     res_1 = await reports_which_is_active()
     time_sleep = 1505
     while time_sleep > 0:
         if res_1:
-            await call.message.answer(text=dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
+            await call.message.answer(text=call.from_user.id+dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
             break
         else:
             await asyncio.sleep(10)
@@ -102,12 +101,12 @@ async def fast_report_facebook(call: CallbackQuery):
 
 @user_router.callback_query(F.data == 'fast_report_ewebinar')
 async def fast_report_ewebinar(call: CallbackQuery):
-    await call.message.edit_text(text=dialogs.RU_ru['wait_long'])
+    await call.message.edit_text(text=dialogs.RU_ru['wait_long'], reply_markup=create_menu_keyboard())
     res_2 = await get_all_registrants()
     time_sleep = 1505
     while time_sleep > 0:
         if res_2:
-            await call.message.answer(text=dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
+            await call.message.answer(text=call.from_user.id+dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
             break
         else:
             await asyncio.sleep(10)
@@ -119,12 +118,12 @@ async def fast_report_ewebinar(call: CallbackQuery):
 
 @user_router.callback_query(F.data == 'fast_report_getcourse')
 async def fast_report_getcourse(call: CallbackQuery):
-    await call.message.edit_text(text=dialogs.RU_ru['wait_long'])
+    await call.message.edit_text(text=dialogs.RU_ru['wait_long'], reply_markup=create_menu_keyboard())
     res_3 = await getcourse_report()
     time_sleep = 1505
     while time_sleep > 0:
         if res_3:
-            await call.message.answer(text=dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
+            await call.message.answer(text=call.from_user.id+dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
             break
         else:
             await asyncio.sleep(10)
@@ -184,14 +183,23 @@ async def add_token_help_call(call: CallbackQuery):
 
 @user_router.callback_query(F.data == 'tokens_2_help')
 async def tokens_2_help_call(call: CallbackQuery):
-    await call.message.edit_text(text=dialogs.RU_ru['help_cmd']['tokens_st1'])
-    await sleep(10)
+    await call.message.edit_text(text=dialogs.RU_ru['help_cmd']['tokens_fb_st1'], reply_markup=create_tokens_2_help_keyboard())
+
+
+@user_router.callback_query(F.data == 'tokens_help_facebook')
+async def tokens_facebook_help_call(call: CallbackQuery):
+    await call.answer()
     await call.message.answer_photo(photo=FSInputFile(os.path.abspath('../media/tokens_menu.png')),
-                                    caption=dialogs.RU_ru['help_cmd']['tokens_st2'])
+                                    caption=dialogs.RU_ru['help_cmd']['tokens_fb_st2'])
     await sleep(10)
-    await call.message.answer(text=dialogs.RU_ru['help_cmd']['tokens_st3'])
+    await call.message.answer(text=dialogs.RU_ru['help_cmd']['tokens_fb_st3'])
     await sleep(10)
     await call.message.answer(dialogs.RU_ru['help_cmd']['help_menu'], reply_markup=create_help_menu_keyboard())
+
+
+@user_router.callback_query(F.data == 'tokens_help_other')
+async def tokens_help_other_call(call: CallbackQuery):
+    await call.message.edit_text(text='text')
 
 
 @user_router.callback_query(F.data == 'main_menu')
@@ -202,8 +210,7 @@ async def white_list_call(call: CallbackQuery, state: FSMContext):
 
 @user_router.callback_query(F.data == 'white_list')
 async def white_list_call(call: CallbackQuery, state: FSMContext):
-    keyboard = create_white_list_keyboard()
-    await call.message.edit_text(text=dialogs.RU_ru['white_list'], reply_markup=keyboard)
+    await call.message.edit_text(text=dialogs.RU_ru['white_list'], reply_markup=create_white_list_keyboard())
     await state.set_state(WhiteList.user)
 
 
@@ -219,13 +226,3 @@ async def fast_report_help(call: CallbackQuery):
     await call.message.edit_text(dialogs.RU_ru['help_cmd']['fast_report'])
     await sleep(10)
     await call.message.answer(dialogs.RU_ru['help_cmd']['help_menu'], reply_markup=create_help_menu_keyboard())
-
-
-@user_router.callback_query(F.data == 'next_page')
-async def white_list_next_page(call: CallbackQuery):
-    pass
-
-
-@user_router.callback_query(F.data == 'last_page')
-async def white_list_last_page(call: CallbackQuery):
-    pass

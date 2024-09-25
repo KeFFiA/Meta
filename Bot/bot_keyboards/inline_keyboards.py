@@ -177,12 +177,29 @@ def create_help_menu_white_list_keyboard():
 
 
 def create_help_menu_tokens_keyboard():
-    tokens = InlineKeyboardButton(text=dialogs.RU_ru['help_cmd']['tokens_btn'], callback_data='tokens_2_help')
-    add_token = InlineKeyboardButton(text=dialogs.RU_ru['help_cmd']['add_tokens_btn'], callback_data='add_token_help')
+    tokens = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['token'], callback_data='tokens_2_help')
+    add_token = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['add_token'], callback_data='add_token_help')
+    back = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='help')
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [tokens],
-        [add_token]
+        [add_token],
+        [back]
+    ])
+
+    return keyboard
+
+
+def create_tokens_2_help_keyboard():
+    facebook = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['facebook'], callback_data='tokens_help_facebook')
+    other = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['other'], callback_data='tokens_help_other')
+    youtube = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['youtube'], callback_data='tokens_help_youtube')
+    back = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='tokens_help')
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [facebook, youtube],
+        [other],
+        [back]
     ])
 
     return keyboard

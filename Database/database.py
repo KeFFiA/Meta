@@ -136,7 +136,8 @@ create_tokens_table = """
         id SERIAL PRIMARY KEY,
         api_token TEXT UNIQUE NOT NULL,
         service TEXT NOT NULL,
-        account_name TEXT DEFAULT NULL
+        account_name TEXT DEFAULT NULL,
+        is_active BOOLEAN DEFAULT TRUE
     )
     """
 
@@ -145,7 +146,7 @@ create_adaccounts_table = """
         id SERIAL PRIMARY KEY,
         api_token TEXT NOT NULL,
         acc_name TEXT NOT NULL,
-        acc_id TEXT NOT NULL,
+        acc_id TEXT UNIQUE NOT NULL,
         is_active BOOLEAN DEFAULT FALSE,
         account_name BOOLEAN DEFAULT FALSE,
         account_id BOOLEAN DEFAULT FALSE,
