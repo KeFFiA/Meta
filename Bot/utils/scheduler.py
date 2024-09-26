@@ -9,10 +9,11 @@ from API_SCRIPTS.GetCourse_API import getcourse_report
 from API_SCRIPTS.eWebinar_API import get_all_registrants
 from Database.database import db
 
-from .logging_settings import scheduler_logger
+from Bot.utils.logging_settings import scheduler_logger
+from path import bot_temp_path
 
 try:
-    path = os.path.abspath('../Bot/temp/last_update.json')
+    path = os.path.join(bot_temp_path, 'last_update.json')
     open(path, 'r').close()
 except Exception as _ex:
     scheduler_logger.critical(f'Error opening last_update.json: {_ex}')

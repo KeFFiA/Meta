@@ -6,6 +6,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from Bot import dialogs
 from Database.database_query import white_list, token_list
+from path import bot_temp_path
 
 
 def create_white_list_keyboard():
@@ -208,8 +209,7 @@ def create_tokens_2_help_keyboard():
 
 
 def create_scheduler_count_keyboard(count, data):
-    temp_dir = os.path.abspath(f'../Bot/temp/')
-    file_name = os.path.join(temp_dir, f'{data}_scheduler.json')
+    file_name = os.path.join(bot_temp_path, f'{data}_scheduler.json')
     try:
         with open(file_name, 'r') as file:
             try:

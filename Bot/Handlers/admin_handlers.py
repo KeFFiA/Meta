@@ -1,7 +1,7 @@
 import json
 import os
 from asyncio import sleep
-from itertools import count
+from path import bot_temp_path
 
 from aiogram import Router, F
 from aiogram.filters import Command, CommandObject
@@ -827,11 +827,10 @@ async def scheduler_add_st_2(call: CallbackQuery, state: FSMContext):
 
     if call.data == 'done':
         try:
-            os.mkdir('../Bot/temp/')
+            os.mkdir(bot_temp_path)
         except FileExistsError:
             pass
-        temp_dir = os.path.abspath('../Bot/temp/')
-        file_name = os.path.join(temp_dir, f'{data['choose']}_scheduler.json')
+        file_name = os.path.join(bot_temp_path, f'{data['choose']}_scheduler.json')
         try:
             with open(file_name, 'r') as file:
                 try:
@@ -874,11 +873,10 @@ async def scheduler_add_st_2(call: CallbackQuery, state: FSMContext):
 
     if call.data == 'scheduler1_back':
         try:
-            os.mkdir('../Bot/temp/')
+            os.mkdir(bot_temp_path)
         except FileExistsError:
             pass
-        temp_dir = os.path.abspath(f'../Bot/temp/')
-        file_name = os.path.join(temp_dir, f'{data['choose']}_scheduler.json')
+        file_name = os.path.join(bot_temp_path, f'{data['choose']}_scheduler.json')
         with open(file_name, 'w') as f:
             f.write('')
         await state.clear()
@@ -899,9 +897,8 @@ async def add_task(event: Message | CallbackQuery, state: FSMContext):
                                                                                    data=data['choose']))
     elif isinstance(event, Message):
         text = {f'{choose}_{task}': event.text}
-        temp_dir = os.path.abspath(f'../Bot/temp/')
-        file_name = os.path.join(temp_dir, f'{choose}_scheduler.json')
-        os.makedirs(temp_dir, exist_ok=True)
+        os.makedirs(bot_temp_path, exist_ok=True)
+        file_name = os.path.join(bot_temp_path, f'{choose}_scheduler.json')
         file_data = []
 
         try:
@@ -1022,19 +1019,25 @@ async def scheduler_back_1_call(call: CallbackQuery, state: FSMContext):
 @admin_router.callback_query(F.data == 'logs')
 async def logs_call(call: CallbackQuery):
     try:
-        path = os.path.abspath('./Bot/temp/last_update.json')
+        path = os.path.join(bot_temp_path, 'last_update.json')
         open(path).close()
     except Exception as _ex:
         admin_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
 
     if os.path.exists(path):
-        with open(path, 'r', encoding='utf-8') as file:
-            data = json.load(file)
+        try:
+            with open(path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+        except:
+            data = {}
     else:
         data = {}
 
-    if len(data) == 0:
+    if not data:
+        # try:
         await call.message.edit_text(dialogs.RU_ru['logs']['None'], reply_markup=create_menu_keyboard())
+        # except:
+        #     await call.answer()
     else:
         text = f'{dialogs.RU_ru['logs']['notNone']}'
         for item in data:
