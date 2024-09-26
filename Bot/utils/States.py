@@ -8,6 +8,7 @@ class WhiteList(StatesGroup):
 
 class TokenList(StatesGroup):
     token = State()
+    in_token = State()
 
 
 class AdaccountsList(StatesGroup):

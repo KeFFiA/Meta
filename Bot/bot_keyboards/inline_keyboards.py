@@ -272,3 +272,27 @@ def create_fast_report_which_keyboard():
     return keyboard
 
 
+def create_tokens_settings_keyboard(is_active):
+    turn_on = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['activate'], callback_data='tokens_settings_activate')
+    turn_off = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['deactivate'], callback_data='tokens_settings_deactivate')
+    time = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['date_preset'], callback_data='tokens_settings_time')
+    delete = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['delete'], callback_data='tokens_settings_delete')
+    back = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['back'], callback_data='tokens')
+
+    if str(is_active).lower() == 'true':
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [turn_off],
+            # [time],
+            [delete],
+            [back]
+        ])
+        return keyboard
+    else:
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [turn_on],
+            # [time],
+            [delete],
+            [back]
+        ])
+        return keyboard
+

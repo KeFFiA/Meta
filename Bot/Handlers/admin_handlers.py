@@ -3,7 +3,6 @@ import os
 from asyncio import sleep
 
 from aiogram import Router, F
-from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
@@ -16,7 +15,7 @@ from API_SCRIPTS.eWebinar_API import check_acc_ewebinar
 from Bot import dialogs
 from Bot.bot_keyboards.inline_keyboards import create_white_list_keyboard, create_token_list_keyboard, \
     create_adacc_settings_keyboard, create_schedulers_keyboard, create_schedulers_add_keyboard, \
-    create_scheduler_count_keyboard, create_menu_keyboard
+    create_scheduler_count_keyboard, create_menu_keyboard, create_tokens_settings_keyboard
 from Bot.utils.States import WhiteList, TokenList, AdaccountsList, SchedulerList
 from Bot.utils.scheduler import add_job, get_jobs
 from Database.database import db
@@ -112,7 +111,7 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
     if service.lower() == 'facebook':
         token = db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=token_id, fetch='fetchone')[0]
 
-        await state.update_data(token_id=token_id)
+        await state.update_data(token_id=token)
         token_accounts = list(
             db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
                      values=(token,), fetch='fetchall'))
@@ -140,8 +139,9 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
             count += 1
 
         builder.row(*buttons, width=3)
+        delete = InlineKeyboardButton(callback_data='act_delete_fb_token', text=dialogs.RU_ru['navigation']['delete'])
         last_btn = InlineKeyboardButton(callback_data='act_back_to_token', text=dialogs.RU_ru['navigation']['back'])
-        last_btns = InlineKeyboardMarkup(inline_keyboard=[[last_btn]])
+        last_btns = InlineKeyboardMarkup(inline_keyboard=[[delete],[last_btn]])
         builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
         keyboard = builder.as_markup()
 
@@ -158,15 +158,65 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
         
 *{dialogs.RU_ru['adaccount']['id']}* {token[:40]}...
 *{dialogs.RU_ru['adaccount']['reports']}* {dialogs.RU_ru['adaccount']['is_active'][str(is_active).lower()]}""",
+                                         reply_markup=create_tokens_settings_keyboard(is_active),
                                          parse_mode='MARKDOWN')
+            await state.update_data(token=token, account_name=account_name, service=service)
+            await state.set_state(TokenList.in_token)
         else:
             await call.message.edit_text(text=f"""*{service}*
 
 *{dialogs.RU_ru['adaccount']['name']}* {account_name}
 *{dialogs.RU_ru['adaccount']['id']}* {token[:40]}...
 *{dialogs.RU_ru['adaccount']['reports']}* {dialogs.RU_ru['adaccount']['is_active'][str(is_active).lower()]}""",
+                                         reply_markup=create_tokens_settings_keyboard(is_active),
                                          parse_mode='MARKDOWN')
+            await state.update_data(token=token, account_name=account_name, service=service )
+            await state.set_state(TokenList.in_token)
 
+
+@admin_router.callback_query(F.data.startswith('tokens_settings_'), TokenList.in_token)
+async def tokens_settings_press_token(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    if call.data == 'tokens_settings_activate':
+        db.query(query="UPDATE tokens SET is_active=TRUE WHERE api_token=%s", values=(data['token'],))
+        if data['account_name'] is None:
+            await call.message.edit_text(text=f"""*{data['service']}*
+
+*{dialogs.RU_ru['adaccount']['id']}* {data['token'][:40]}...
+*{dialogs.RU_ru['adaccount']['reports']}* {dialogs.RU_ru['adaccount']['is_active']['true']}""",
+                                         reply_markup=create_tokens_settings_keyboard('true'),
+                                         parse_mode='MARKDOWN')
+        else:
+            await call.message.edit_text(text=f"""*{data['service']}*
+
+*{dialogs.RU_ru['adaccount']['name']}* {data['account_name']}
+*{dialogs.RU_ru['adaccount']['id']}* {data['token'][:40]}...
+*{dialogs.RU_ru['adaccount']['reports']}* {dialogs.RU_ru['adaccount']['is_active']['true']}""",
+                                         reply_markup=create_tokens_settings_keyboard('true'),
+                                         parse_mode='MARKDOWN')
+    elif call.data == 'tokens_settings_deactivate':
+        db.query(query="UPDATE tokens SET is_active=FALSE WHERE api_token=%s", values=(data['token'],))
+        if data['account_name'] is None:
+            await call.message.edit_text(text=f"""*{data['service']}*
+
+*{dialogs.RU_ru['adaccount']['id']}* {data['token'][:40]}...
+*{dialogs.RU_ru['adaccount']['reports']}* {dialogs.RU_ru['adaccount']['is_active']['false']}""",
+                                         reply_markup=create_tokens_settings_keyboard('false'),
+                                         parse_mode='MARKDOWN')
+        else:
+            await call.message.edit_text(text=f"""*{data['service']}*
+
+*{dialogs.RU_ru['adaccount']['name']}* {data['account_name']}
+*{dialogs.RU_ru['adaccount']['id']}* {data['token'][:40]}...
+*{dialogs.RU_ru['adaccount']['reports']}* {dialogs.RU_ru['adaccount']['is_active']['false']}""",
+                                         reply_markup=create_tokens_settings_keyboard('false'),
+                                         parse_mode='MARKDOWN')
+    elif call.data == 'tokens_settings_time':
+        await call.answer()
+    elif call.data == 'tokens_settings_delete':
+        db.query(query="DELETE FROM tokens WHERE api_token=%s", values=(data['token'],))
+        await call.message.edit_text(text=dialogs.RU_ru['navigation']['token'], reply_markup=create_token_list_keyboard())
+        await state.clear()
 
 
 @admin_router.callback_query(F.data.startswith('act_'), AdaccountsList.acc)
@@ -177,6 +227,13 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
         await call.message.edit_text(dialogs.RU_ru['tokens_list'], reply_markup=keyboard)
         await state.update_data(token_id=None, account=None)
         await state.set_state(TokenList.token)
+    elif choose == 'act_delete_fb_token':
+        data = await state.get_data()
+        db.query(query="DELETE FROM tokens WHERE api_token=%s", values=(data['token_id'],))
+        db.query(query="DELETE FROM adaccounts WHERE api_token=%s", values=(data['token_id'],))
+        await call.message.edit_text(text=dialogs.RU_ru['navigation']['token'],
+                                     reply_markup=create_token_list_keyboard())
+        await state.clear()
     else:
         await state.update_data(account=choose)
 
@@ -249,7 +306,8 @@ async def acc_press_btn(call: CallbackQuery, state: FSMContext):
 
         builder.row(*buttons, width=3)
         last_btn = InlineKeyboardButton(callback_data='act_back_to_token', text=dialogs.RU_ru['navigation']['back'])
-        last_btns = InlineKeyboardMarkup(inline_keyboard=[[last_btn]])
+        delete = InlineKeyboardButton(callback_data='act_delete_fb_token', text=dialogs.RU_ru['navigation']['delete'])
+        last_btns = InlineKeyboardMarkup(inline_keyboard=[[delete], [last_btn]])
         builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
         keyboard = builder.as_markup()
 
@@ -875,6 +933,7 @@ async def add_task(event: Message | CallbackQuery, state: FSMContext):
 
 @admin_router.callback_query(F.data == 'tokens')
 async def tokens_call(call: CallbackQuery, state: FSMContext):
+    await state.update_data(token_id='')
     keyboard = create_token_list_keyboard()
     await call.message.edit_text(dialogs.RU_ru['tokens_list'], reply_markup=keyboard)
     await state.set_state(TokenList.token)
