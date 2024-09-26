@@ -30,7 +30,7 @@ class Database:
         self.cursor.close()
         self.connect.close()
 
-    msg = f'The sql query failed with an error'
+    msg = f'The sql query failed with an error' # Default error query message, when DEBUG -> False
 
     def query(self, query: str, values: tuple = None, execute_many = False, fetch: str = None, size: int = None, log_level: int = 40,
               msg: str = msg, debug: bool = False) -> Any:
