@@ -1,6 +1,7 @@
 import json
 import os
 from asyncio import sleep
+from itertools import count
 
 from aiogram import Router, F
 from aiogram.filters import Command, CommandObject
@@ -826,10 +827,10 @@ async def scheduler_add_st_2(call: CallbackQuery, state: FSMContext):
 
     if call.data == 'done':
         try:
-            os.mkdir('./temp/')
+            os.mkdir('../Bot/temp/')
         except FileExistsError:
             pass
-        temp_dir = os.path.abspath('./temp/')
+        temp_dir = os.path.abspath('../Bot/temp/')
         file_name = os.path.join(temp_dir, f'{data['choose']}_scheduler.json')
         try:
             with open(file_name, 'r') as file:
@@ -873,10 +874,10 @@ async def scheduler_add_st_2(call: CallbackQuery, state: FSMContext):
 
     if call.data == 'scheduler1_back':
         try:
-            os.mkdir('./temp/')
+            os.mkdir('../Bot/temp/')
         except FileExistsError:
             pass
-        temp_dir = os.path.abspath(f'./temp/')
+        temp_dir = os.path.abspath(f'../Bot/temp/')
         file_name = os.path.join(temp_dir, f'{data['choose']}_scheduler.json')
         with open(file_name, 'w') as f:
             f.write('')
@@ -901,30 +902,34 @@ async def add_task(event: Message | CallbackQuery, state: FSMContext):
         temp_dir = os.path.abspath(f'../Bot/temp/')
         file_name = os.path.join(temp_dir, f'{choose}_scheduler.json')
         os.makedirs(temp_dir, exist_ok=True)
-
         file_data = []
 
         try:
-            with open(file_name, 'r') as file:
+            with open(file_name, 'r', encoding='utf-8') as file:
                 try:
                     file_data = json.load(file)
                 except json.JSONDecodeError:
                     file_data = []
         except FileNotFoundError:
             pass
-        existing_item = None
+
+        # Проверка и обновление данных
+        exists = False
         for item in file_data:
-            if task in item:
-                existing_item = item
+            # Проверяем, существует ли ключ
+            if f'{choose}_{task}' in item:
+                item[f'{choose}_{task}'] = event.text  # Обновляем значение
+                exists = True
                 break
 
-        if existing_item is not None:
-            existing_item[task] = event.text
-        else:
-            file_data.append(text)
+        if not exists:
+            # Проверяем, существуют ли уже идентичные записи
+            if all(f'{choose}_{task}' not in i for i in file_data):
+                file_data.append(text)  # Добавляем новую запись только если таковой нет
 
-        with open(file_name, 'w') as file:
-            json.dump(file_data, file, indent=4)
+        # Запись обновленных данных обратно в файл
+        with open(file_name, 'w', encoding='utf-8') as file:
+            json.dump(file_data, file, ensure_ascii=False, indent=4)
 
         await event.answer(text=dialogs.RU_ru['scheduler']['add_text'],
                               reply_markup=create_scheduler_count_keyboard(count=data['count'], data=data['choose']))

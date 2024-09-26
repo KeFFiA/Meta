@@ -208,7 +208,7 @@ def create_tokens_2_help_keyboard():
 
 
 def create_scheduler_count_keyboard(count, data):
-    temp_dir = os.path.abspath(f'./temp/')
+    temp_dir = os.path.abspath(f'../Bot/temp/')
     file_name = os.path.join(temp_dir, f'{data}_scheduler.json')
     try:
         with open(file_name, 'r') as file:
