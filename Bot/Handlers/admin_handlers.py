@@ -1017,7 +1017,7 @@ async def scheduler_back_1_call(call: CallbackQuery, state: FSMContext):
 @admin_router.callback_query(F.data == 'logs')
 async def logs_call(call: CallbackQuery):
     try:
-        path = os.path.abspath('./temp/last_update.json')
+        path = os.path.abspath('./Bot/temp/last_update.json')
         open(path).close()
     except Exception as _ex:
         admin_handlers_logger.critical(f'Error opening last_update.json: {_ex}')

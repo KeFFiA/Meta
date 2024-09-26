@@ -12,7 +12,7 @@ from Database.database import db
 from .logging_settings import scheduler_logger
 
 try:
-    path = os.path.abspath('./temp/last_update.json')
+    path = os.path.abspath('./Bot/temp/last_update.json')
     open(path).close()
 except Exception as _ex:
     scheduler_logger.critical(f'Error opening last_update.json: {_ex}')
