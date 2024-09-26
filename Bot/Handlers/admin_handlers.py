@@ -898,7 +898,7 @@ async def add_task(event: Message | CallbackQuery, state: FSMContext):
                                                                                    data=data['choose']))
     elif isinstance(event, Message):
         text = {f'{choose}_{task}': event.text}
-        temp_dir = os.path.abspath(f'./temp/')
+        temp_dir = os.path.abspath(f'../Bot/temp/')
         file_name = os.path.join(temp_dir, f'{choose}_scheduler.json')
         os.makedirs(temp_dir, exist_ok=True)
 
