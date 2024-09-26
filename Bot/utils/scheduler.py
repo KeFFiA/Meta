@@ -13,7 +13,7 @@ from .logging_settings import scheduler_logger
 
 try:
     path = os.path.abspath('./Bot/temp/last_update.json')
-    open(path).close()
+    open(path, 'r').close()
 except Exception as _ex:
     scheduler_logger.critical(f'Error opening last_update.json: {_ex}')
 
