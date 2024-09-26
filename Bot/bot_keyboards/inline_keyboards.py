@@ -130,6 +130,7 @@ def create_menu_keyboard():
     tokens = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['token'], callback_data='tokens')
     scheduler = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['scheduler'], callback_data='scheduler')
     fast_report = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['fast_report'], callback_data='fast_report')
+    logs = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['logs'], callback_data='logs')
     helper = InlineKeyboardButton(text=dialogs.RU_ru['navigation']['help'], callback_data='help')
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -137,6 +138,7 @@ def create_menu_keyboard():
         [tokens],
         [scheduler],
         [fast_report],
+        [logs],
         [helper]
     ])
 

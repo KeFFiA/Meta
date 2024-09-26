@@ -26,6 +26,7 @@ async def check_acc_ewebinar(token):
 
 
 async def get_all_registrants():
+    ewebinar_logger.info('Start eWebinar reports function')
     count = 1
     tokens = db.query("SELECT api_token FROM tokens WHERE service = 'eWebinar'", fetch='fetchall')
     url = 'https://api.ewebinar.com/v2/registrants'

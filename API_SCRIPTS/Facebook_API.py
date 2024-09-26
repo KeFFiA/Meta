@@ -3,7 +3,6 @@ from decimal import Decimal
 
 import certifi
 import requests
-import threading
 from aiohttp import ClientSession
 
 from Database.database import db
@@ -36,6 +35,7 @@ def check_adacc_facebook(token):
 
 
 async def reports_which_is_active():
+    facebook_logger.info('Start Facebook reports function')
     adacc_ids = db.query(query="SELECT acc_id, api_token, date_preset, increment, level FROM adaccounts "
                                "WHERE is_active = TRUE",
                          fetch='fetchall')
@@ -164,6 +164,7 @@ async def reports_which_is_active():
                                     record.get('date_start', None),
                                     record.get('date_stop', None),
                                 ))
+                        facebook_logger.info(f'Facebook report complete with {item} records')
 
                     except Exception as _ex:
                         facebook_logger.error(f'Report failed with error: {_ex}')

@@ -107,9 +107,9 @@ async def token_cmd(message: Message, state: FSMContext):
 async def token_list_press_token(call: CallbackQuery, state: FSMContext):
     await state.update_data(token_id=None)
     token_id = call.data.removeprefix('token_')
-    service = db.query("SELECT service FROM tokens WHERE id = %s", values=token_id, fetch='fetchone')[0]
+    service = db.query("SELECT service FROM tokens WHERE id = %s", values=(token_id,), fetch='fetchone')[0]
     if service.lower() == 'facebook':
-        token = db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=token_id, fetch='fetchone')[0]
+        token = db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=(token_id,), fetch='fetchone')[0]
 
         await state.update_data(token_id=token)
         token_accounts = list(
@@ -152,7 +152,7 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
     else:
         token, service, account_name, is_active = db.query(
             query="SELECT api_token, service, account_name, is_active FROM tokens WHERE id=%s",
-            values=token_id, fetch='fetchone')
+            values=(token_id,), fetch='fetchone')
         if account_name is None:
             await call.message.edit_text(text=f"""*{service}*
         
@@ -203,6 +203,7 @@ async def tokens_settings_press_token(call: CallbackQuery, state: FSMContext):
 *{dialogs.RU_ru['adaccount']['reports']}* {dialogs.RU_ru['adaccount']['is_active']['false']}""",
                                          reply_markup=create_tokens_settings_keyboard('false'),
                                          parse_mode='MARKDOWN')
+
         else:
             await call.message.edit_text(text=f"""*{data['service']}*
 
@@ -215,7 +216,8 @@ async def tokens_settings_press_token(call: CallbackQuery, state: FSMContext):
         await call.answer()
     elif call.data == 'tokens_settings_delete':
         db.query(query="DELETE FROM tokens WHERE api_token=%s", values=(data['token'],))
-        await call.message.edit_text(text=dialogs.RU_ru['navigation']['token'], reply_markup=create_token_list_keyboard())
+        await call.answer(text=dialogs.RU_ru['delete_token'].format(data['service']))
+        await call.message.edit_text(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
         await state.clear()
 
 
@@ -231,8 +233,8 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
         data = await state.get_data()
         db.query(query="DELETE FROM tokens WHERE api_token=%s", values=(data['token_id'],))
         db.query(query="DELETE FROM adaccounts WHERE api_token=%s", values=(data['token_id'],))
-        await call.message.edit_text(text=dialogs.RU_ru['navigation']['token'],
-                                     reply_markup=create_token_list_keyboard())
+        await call.answer(text=dialogs.RU_ru['delete_token'].format('Facebook'))
+        await call.message.edit_text(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
         await state.clear()
     else:
         await state.update_data(account=choose)
@@ -1010,3 +1012,29 @@ async def scheduler_back_1_call(call: CallbackQuery, state: FSMContext):
     await state.clear()
     keyboard = create_schedulers_add_keyboard()
     await call.message.edit_text(text=dialogs.RU_ru['scheduler']['which'], reply_markup=keyboard)
+
+
+@admin_router.callback_query(F.data == 'logs')
+async def logs_call(call: CallbackQuery):
+    try:
+        path = os.path.abspath('./temp/last_update.json')
+        open(path).close()
+    except Exception as _ex:
+        admin_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
+
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+    else:
+        data = {}
+
+    if len(data) == 0:
+        await call.message.edit_text(dialogs.RU_ru['logs']['None'], reply_markup=create_menu_keyboard())
+    else:
+        text = f'{dialogs.RU_ru['logs']['notNone']}'
+        for item in data:
+            text += f'<b>{item}</b> - {data[item]}\n'
+        await call.message.edit_text(text=text, reply_markup=create_menu_keyboard())
+
+
+

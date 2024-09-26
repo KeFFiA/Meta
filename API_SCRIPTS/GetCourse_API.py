@@ -31,6 +31,7 @@ async def check_acc_getcourse(token, account_name):
 
 
 async def getcourse_report():
+    getcourse_logger.info('Start GetCourse report function')
     account_names = db.query(query="SELECT api_token, account_name FROM tokens WHERE service = 'GetCourse'", fetch='fetchall')
 
     for token, account_name in account_names:
@@ -56,11 +57,12 @@ async def getcourse_report():
             async with session.get(urls['payments'], params=params) as response:
                 data = await response.json()
                 await getcourse_payments_report(account_name=account_name, params=params, data=data)
-
+        getcourse_logger.info('Finish GetCourse report function')
         return True
 
 
 async def getcourse_users_report(account_name, params, data):
+    getcourse_logger.info('Start GetCourse users report function')
     time = 1200
     while time > 0:
         try:
@@ -94,6 +96,7 @@ async def getcourse_users_report(account_name, params, data):
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                     %s, %s, %s) ON CONFLICT DO NOTHING;""",
                                                values=new_item, execute_many=True, debug=True)
+                            getcourse_logger.info('GetCourse users report function complete')
                 break
             else:
                 await sleep(60)
@@ -122,6 +125,7 @@ async def getcourse_users_report(account_name, params, data):
 
 
 async def getcourse_deals_report(account_name, params, data):
+    getcourse_logger.info('Start GetCourse deals report function')
     time = 1800
     while time > 0:
         try:
@@ -156,6 +160,7 @@ async def getcourse_deals_report(account_name, params, data):
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                             %s, %s) ON CONFLICT DO NOTHING;""",
                                                values=new_item, execute_many=True, debug=True)
+                            getcourse_logger.info('GetCourse deals report function complete')
                 break
             else:
                 await sleep(120)
@@ -184,6 +189,7 @@ async def getcourse_deals_report(account_name, params, data):
 
 
 async def getcourse_payments_report(account_name, params, data):
+    getcourse_logger.info('Start GetCourse payments report function')
     time = 1200
     while time > 0:
         try:
@@ -204,6 +210,7 @@ async def getcourse_payments_report(account_name, params, data):
                             Creation_Date, Type, Status, Amount, Fees, Received, Payment_Code, Title)
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;""",
                                                values=new_item, execute_many=True, debug=True)
+                            getcourse_logger.info('GetCourse payments report function complete')
                 break
             else:
                 await sleep(120)

@@ -33,7 +33,7 @@ class Database:
     msg = f'The sql query failed with an error' # Default error query message, when DEBUG -> False
 
     def query(self, query: str, values: tuple = None, execute_many = False, fetch: str = None, size: int = None, log_level: int = 40,
-              msg: str = msg, debug: bool = False) -> Any:
+              msg: str = msg, debug: bool = True) -> Any:
         """
         :param query: takes sql query, for example: "SELECT * FROM table"
         :param values: takes tuple of values
