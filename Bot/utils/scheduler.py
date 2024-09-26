@@ -15,7 +15,7 @@ try:
     path = os.path.abspath('./temp/last_update.json')
     open(path).close()
 except Exception as _ex:
-    scheduler_logger.critical(f'Error opening last update.json: {_ex}')
+    scheduler_logger.critical(f'Error opening last_update.json: {_ex}')
 
 scheduler = AsyncIOScheduler()
 
