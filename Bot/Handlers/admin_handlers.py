@@ -1034,10 +1034,10 @@ async def logs_call(call: CallbackQuery):
         data = {}
 
     if not data:
-        # try:
-        await call.message.edit_text(dialogs.RU_ru['logs']['None'], reply_markup=create_menu_keyboard())
-        # except:
-        #     await call.answer()
+        try:
+            await call.message.edit_text(dialogs.RU_ru['logs']['None'], reply_markup=create_menu_keyboard())
+        except:
+            await call.answer()
     else:
         text = f'{dialogs.RU_ru['logs']['notNone']}'
         for item in data:
