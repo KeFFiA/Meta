@@ -114,7 +114,7 @@ async def reports_which_is_active():
                             break
         except Exception as _ex:
             facebook_logger.error(f'Report failed with error: {_ex}')
-            return
+            return False
     campaign_ids_res = list(dict.fromkeys(campaign_ids))
     item = 0
     for camp_id in campaign_ids_res:
@@ -164,11 +164,10 @@ async def reports_which_is_active():
                                     record.get('date_start', None),
                                     record.get('date_stop', None),
                                 ))
-                        facebook_logger.info(f'Facebook report complete with {item} records')
 
                     except Exception as _ex:
                         facebook_logger.error(f'Report failed with error: {_ex}')
-                        return
+                        return False
                     if 'paging' in data and 'next' in data['paging']:
                         url = data['paging']['next']
                         params = {}
@@ -184,6 +183,7 @@ async def reports_which_is_active():
                 impressions, frequency, clicks, unique_clicks, spend, reach, cpp, cpm, unique_link_clicks_ctr, ctr,
                 unique_ctr, cpc, cost_per_unique_click, objective, buying_type, created_time, date_start, date_stop
             );""", debug=True)
+    facebook_logger.info(f'Facebook report complete with {item} records')
     return True
 
 

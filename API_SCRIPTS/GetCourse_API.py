@@ -44,21 +44,24 @@ async def getcourse_report():
             'deals': f'https://{account_name}.getcourse.ru/pl/api/account/deals',
             'payments': f'https://{account_name}.getcourse.ru/pl/api/account/payments',
         }
-
-        async with ClientSession() as session:
-            async with session.get(urls['users'], params=params) as response:
-                data = await response.json()
-                await getcourse_users_report(account_name=account_name, params=params, data=data)
-        async with ClientSession() as session:
-            async with session.get(urls['deals'], params=params) as response:
-                data = await response.json()
-                await getcourse_deals_report(account_name=account_name, params=params, data=data)
-        async with ClientSession() as session:
-            async with session.get(urls['payments'], params=params) as response:
-                data = await response.json()
-                await getcourse_payments_report(account_name=account_name, params=params, data=data)
-        getcourse_logger.info('Finish GetCourse report function')
-        return True
+        try:
+            async with ClientSession() as session:
+                async with session.get(urls['users'], params=params) as response:
+                    data = await response.json()
+                    await getcourse_users_report(account_name=account_name, params=params, data=data)
+            async with ClientSession() as session:
+                async with session.get(urls['deals'], params=params) as response:
+                    data = await response.json()
+                    await getcourse_deals_report(account_name=account_name, params=params, data=data)
+            async with ClientSession() as session:
+                async with session.get(urls['payments'], params=params) as response:
+                    data = await response.json()
+                    await getcourse_payments_report(account_name=account_name, params=params, data=data)
+            getcourse_logger.info('Finish GetCourse report function')
+            return True
+        except Exception as _ex:
+            getcourse_logger.error(f'GetCourse report failed with error: {_ex}')
+            return False
 
 
 async def getcourse_users_report(account_name, params, data):
@@ -103,8 +106,7 @@ async def getcourse_users_report(account_name, params, data):
                 time -= 60
         except Exception as _ex:
             getcourse_logger.error(msg=f'GetCourse users_report failed with error: {_ex}')
-            await sleep(60)
-            time -= 60
+            return False
 
     getcourse_db.query(query="""DELETE FROM getcourse_users
                 WHERE ctid NOT IN (
@@ -167,8 +169,7 @@ async def getcourse_deals_report(account_name, params, data):
                 time -= 120
         except Exception as _ex:
             getcourse_logger.error(msg=f'GetCourse deals_report failed with error: {_ex}')
-            await sleep(120)
-            time -= 120
+            return False
 
     getcourse_db.query(query="""DELETE FROM getcourse_deals
                         WHERE ctid NOT IN (
@@ -217,8 +218,7 @@ async def getcourse_payments_report(account_name, params, data):
                 time -= 120
         except Exception as _ex:
             getcourse_logger.error(msg=f'GetCourse payments_report failed with error: {_ex}')
-            await sleep(120)
-            time -= 120
+            return False
 
     getcourse_db.query(query="""DELETE FROM getcourse_payments
                             WHERE ctid NOT IN (

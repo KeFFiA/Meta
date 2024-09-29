@@ -1,8 +1,10 @@
 import asyncio
+import json
 import os
 from asyncio import sleep, create_task
+from datetime import datetime
 
-from aiogram import Router, Bot, F, flags
+from aiogram import Router, Bot, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
@@ -17,6 +19,8 @@ from Bot.dialogs import commands
 from Bot.utils.States import WhiteList
 from Database.database import db
 from Bot.bot_keyboards.inline_keyboards import create_fast_report_which_keyboard, create_tokens_2_help_keyboard
+from path import bot_temp_path
+from utils.logging_settings import user_handlers_logger
 
 user_router = Router()
 
@@ -71,6 +75,25 @@ async def fast_report_all(call: CallbackQuery):
         if task_1.done() and task_2.done() and task_3.done():
             await call.message.answer(text=f'{call.from_user.first_name} {dialogs.RU_ru["fast_report_ok"]}',
                                       reply_markup=create_menu_keyboard())
+            try:
+                records = []
+                path = os.path.join(bot_temp_path, 'last_update.json')
+                for item in dialogs.RU_ru['last_update_records']['success']:
+                    records.append(item)
+
+                try:
+                    with open(path, 'r', encoding='utf-8') as file:
+                        data = json.load(file)
+                except:
+                    data = {}
+                for record in records:
+                    for key, value in record.items():
+                        data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+                    with open(path, 'w', encoding='utf-8') as file:
+                        json.dump(data, file, ensure_ascii=False, indent=4)
+            except Exception as _ex:
+                user_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
             break
         else:
             await asyncio.sleep(10)
@@ -78,6 +101,25 @@ async def fast_report_all(call: CallbackQuery):
 
             if time_sleep <= 5:
                 await call.message.answer(text=dialogs.RU_ru['fast_report_bad'], reply_markup=create_menu_keyboard())
+                try:
+                    records = []
+                    path = os.path.join(bot_temp_path, 'last_update.json')
+                    for item in dialogs.RU_ru['last_update_records']['failed']:
+                        records.append(item)
+
+                    try:
+                        with open(path, 'r', encoding='utf-8') as file:
+                            data = json.load(file)
+                    except:
+                        data = {}
+                    for record in records:
+                        for key, value in record.items():
+                            data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+                        with open(path, 'w', encoding='utf-8') as file:
+                            json.dump(data, file, ensure_ascii=False, indent=4)
+                except Exception as _ex:
+                    user_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
                 break
 
 
@@ -88,13 +130,46 @@ async def fast_report_facebook(call: CallbackQuery):
     time_sleep = 1505
     while time_sleep > 0:
         if res_1:
-            await call.message.answer(text=call.from_user.id+dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
+            await call.message.answer(text=f'{call.from_user.username}{dialogs.RU_ru['fast_report_ok']}',
+                                      reply_markup=create_menu_keyboard())
+            try:
+                path = os.path.join(bot_temp_path, 'last_update.json')
+
+                try:
+                    with open(path, 'r', encoding='utf-8') as file:
+                        data = json.load(file)
+                except:
+                    data = {}
+                for key, value in dialogs.RU_ru['last_update_records']['success'].items():
+                    if key == 'Facebook':
+                        data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+                with open(path, 'w', encoding='utf-8') as file:
+                    json.dump(data, file, ensure_ascii=False, indent=4)
+            except Exception as _ex:
+                user_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
             break
         else:
             await asyncio.sleep(10)
             time_sleep -= 10
             if time_sleep == 5:
                 await call.message.answer(text=dialogs.RU_ru['fast_report_bad'], reply_markup=create_menu_keyboard())
+                try:
+                    path = os.path.join(bot_temp_path, 'last_update.json')
+
+                    try:
+                        with open(path, 'r', encoding='utf-8') as file:
+                            data = json.load(file)
+                    except:
+                        data = {}
+                    for key, value in dialogs.RU_ru['last_update_records']['failed'].items():
+                        if key == 'Facebook':
+                            data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+                    with open(path, 'w', encoding='utf-8') as file:
+                        json.dump(data, file, ensure_ascii=False, indent=4)
+                except Exception as _ex:
+                    user_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
                 break
 
 
@@ -106,12 +181,44 @@ async def fast_report_ewebinar(call: CallbackQuery):
     while time_sleep > 0:
         if res_2:
             await call.message.answer(text=call.from_user.id+dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
+            try:
+                path = os.path.join(bot_temp_path, 'last_update.json')
+
+                try:
+                    with open(path, 'r', encoding='utf-8') as file:
+                        data = json.load(file)
+                except:
+                    data = {}
+                for key, value in dialogs.RU_ru['last_update_records']['success'].items():
+                    if key == 'eWebinar':
+                        data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+                with open(path, 'w', encoding='utf-8') as file:
+                    json.dump(data, file, ensure_ascii=False, indent=4)
+            except Exception as _ex:
+                user_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
             break
         else:
             await asyncio.sleep(10)
             time_sleep -= 10
             if time_sleep == 5:
                 await call.message.answer(text=dialogs.RU_ru['fast_report_bad'], reply_markup=create_menu_keyboard())
+                try:
+                    path = os.path.join(bot_temp_path, 'last_update.json')
+
+                    try:
+                        with open(path, 'r', encoding='utf-8') as file:
+                            data = json.load(file)
+                    except:
+                        data = {}
+                    for key, value in dialogs.RU_ru['last_update_records']['failed'].items():
+                        if key == 'eWebinar':
+                            data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+                    with open(path, 'w', encoding='utf-8') as file:
+                        json.dump(data, file, ensure_ascii=False, indent=4)
+                except Exception as _ex:
+                    user_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
                 break
 
 
@@ -123,12 +230,44 @@ async def fast_report_getcourse(call: CallbackQuery):
     while time_sleep > 0:
         if res_3:
             await call.message.answer(text=call.from_user.id+dialogs.RU_ru['fast_report_ok'], reply_markup=create_menu_keyboard())
+            try:
+                path = os.path.join(bot_temp_path, 'last_update.json')
+
+                try:
+                    with open(path, 'r', encoding='utf-8') as file:
+                        data = json.load(file)
+                except:
+                    data = {}
+                for key, value in dialogs.RU_ru['last_update_records']['success'].items():
+                    if key == 'GetCourse':
+                        data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+                with open(path, 'w', encoding='utf-8') as file:
+                    json.dump(data, file, ensure_ascii=False, indent=4)
+            except Exception as _ex:
+                user_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
             break
         else:
             await asyncio.sleep(10)
             time_sleep -= 10
             if time_sleep == 5:
                 await call.message.answer(text=dialogs.RU_ru['fast_report_bad'], reply_markup=create_menu_keyboard())
+                try:
+                    path = os.path.join(bot_temp_path, 'last_update.json')
+
+                    try:
+                        with open(path, 'r', encoding='utf-8') as file:
+                            data = json.load(file)
+                    except:
+                        data = {}
+                    for key, value in dialogs.RU_ru['last_update_records']['failed'].items():
+                        if key == 'GetCourse':
+                            data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+                    with open(path, 'w', encoding='utf-8') as file:
+                        json.dump(data, file, ensure_ascii=False, indent=4)
+                except Exception as _ex:
+                    user_handlers_logger.critical(f'Error opening last_update.json: {_ex}')
                 break
 
 
@@ -182,7 +321,7 @@ async def add_token_help_call(call: CallbackQuery):
 
 @user_router.callback_query(F.data == 'tokens_2_help')
 async def tokens_2_help_call(call: CallbackQuery):
-    await call.message.edit_text(text=dialogs.RU_ru['help_cmd']['tokens_fb_st1'], reply_markup=create_tokens_2_help_keyboard())
+    await call.message.edit_text(text=dialogs.RU_ru['help_cmd']['tokens'], reply_markup=create_tokens_2_help_keyboard())
 
 
 @user_router.callback_query(F.data == 'tokens_help_facebook')
@@ -191,14 +330,12 @@ async def tokens_facebook_help_call(call: CallbackQuery):
     await call.message.answer_photo(photo=FSInputFile(os.path.abspath('../media/tokens_menu.png')),
                                     caption=dialogs.RU_ru['help_cmd']['tokens_fb_st2'])
     await sleep(10)
-    await call.message.answer(text=dialogs.RU_ru['help_cmd']['tokens_fb_st3'])
-    await sleep(10)
-    await call.message.answer(dialogs.RU_ru['help_cmd']['help_menu'], reply_markup=create_help_menu_keyboard())
+    await call.message.answer(text=dialogs.RU_ru['help_cmd']['tokens_fb_st3'], reply_markup=create_help_menu_keyboard())
 
 
 @user_router.callback_query(F.data == 'tokens_help_other')
 async def tokens_help_other_call(call: CallbackQuery):
-    await call.message.edit_text(text='text')
+    await call.message.edit_text(text=dialogs.RU_ru['help_cmd']['tokens_others'], reply_markup=create_help_menu_keyboard())
 
 
 @user_router.callback_query(F.data == 'main_menu')
@@ -215,13 +352,10 @@ async def white_list_call(call: CallbackQuery, state: FSMContext):
 
 @user_router.callback_query(F.data == 'scheduler_help')
 async def scheduler_help(call: CallbackQuery):
-    await call.message.edit_text(dialogs.RU_ru['help_cmd']['scheduler'])
-    await sleep(10)
-    await call.message.answer(dialogs.RU_ru['help_cmd']['help_menu'], reply_markup=create_help_menu_keyboard())
+    await call.message.edit_text(dialogs.RU_ru['help_cmd']['scheduler'], reply_markup=create_help_menu_keyboard())
 
 
 @user_router.callback_query(F.data == 'fast_report_help')
 async def fast_report_help(call: CallbackQuery):
-    await call.message.edit_text(dialogs.RU_ru['help_cmd']['fast_report'])
-    await sleep(10)
-    await call.message.answer(dialogs.RU_ru['help_cmd']['help_menu'], reply_markup=create_help_menu_keyboard())
+    await call.message.edit_text(dialogs.RU_ru['help_cmd']['fast_report'], reply_markup=create_help_menu_keyboard())
+

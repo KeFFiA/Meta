@@ -130,5 +130,6 @@ async def get_all_registrants():
             return True
         except Exception as _ex:
             ewebinar_logger.error(msg=f'Registrants failed with error: {_ex}')
+            return False
 
 

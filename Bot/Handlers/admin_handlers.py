@@ -1,6 +1,9 @@
 import json
 import os
 from asyncio import sleep
+
+from prettytable import PrettyTable
+
 from path import bot_temp_path
 
 from aiogram import Router, F
@@ -277,12 +280,10 @@ async def token_list_press_token(call: CallbackQuery, state: FSMContext):
 async def acc_press_btn(call: CallbackQuery, state: FSMContext):
     if call.data == 'acc_btn_back_to_acc':
         token_id = await state.get_data()
-        token = \
-            db.query(query="SELECT api_token FROM tokens WHERE id=%s", values=token_id['token_id'], fetch='fetchone')[0]
 
         token_accounts = list(
             db.query(query="SELECT acc_name, acc_id, is_active FROM adaccounts WHERE api_token=%s ORDER BY acc_id",
-                     values=(token,), fetch='fetchall'))
+                     values=(token_id['token_id'],), fetch='fetchall'))
         text = ''
         count = 1
         builder = InlineKeyboardBuilder()
@@ -313,7 +314,6 @@ async def acc_press_btn(call: CallbackQuery, state: FSMContext):
         last_btns = InlineKeyboardMarkup(inline_keyboard=[[delete], [last_btn]])
         builder.attach(InlineKeyboardBuilder.from_markup(last_btns))
         keyboard = builder.as_markup()
-
         await call.message.edit_text(text=text, reply_markup=keyboard)
         await state.set_state(AdaccountsList.acc)
 
@@ -568,6 +568,10 @@ async def acc_press_settings_btn(call: CallbackQuery, state: FSMContext):
 {dialogs.RU_ru['adacc_settings']['increment']['text']} {dialogs.RU_ru['adacc_settings']['increment'][increment]}"""
 
                 await call.message.edit_text(text=text, reply_markup=keyboard)
+
+        elif choose == 'main_menu':
+            await state.clear()
+            await call.message.edit_text(text=dialogs.RU_ru['/menu'], reply_markup=create_menu_keyboard())
         else:
             active = str(db.query(f"SELECT {choose} FROM adaccounts WHERE acc_id=%s",
                                   values=(data['acc_id'],), fetch='fetchone')[0]).lower()
@@ -752,20 +756,34 @@ async def scheduler_command(message: Message):
         await message.answer(dialogs.RU_ru['scheduler']['None'], reply_markup=keyboard_1)
     else:
         keyboard = create_schedulers_keyboard()
-        text = ''
-        data = await get_jobs()
-        count = 1
-        for items in data:
-            job_ids, time = items
-            job_id = job_ids.removesuffix(f'_{count}')
-            if ':' in time:
-                hour, minute = time.split(':')
-            else:
-                hour, minute = time.split('.')
-            text += f'{job_id} - {hour}:{minute}\n\n'
-            count += 1
+        data = db.query(query="SELECT * FROM scheduled_jobs", fetch='fetchall')
 
-        await message.answer(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
+        text = f'{dialogs.RU_ru['navigation']['scheduler']}\n'
+        row_names = {}
+        for item in data:
+            key = item[0][:-12]
+            time = item[1]
+            if key not in row_names:
+                row_names[key] = []
+            row_names[key].append(time)
+
+        max_times = max(len(times) for times in row_names.values())
+
+        row_names_list = []
+        for key, times in row_names.items():
+            times += ['-'] * (max_times - len(times))
+            row_names_list.append([key] + times)
+
+        column_names = ['Задача'] + list(range(1, max_times + 1))
+
+        table = PrettyTable()
+        table.field_names = column_names
+        table.add_rows(row_names_list)
+        table.sortby = "Задача"
+        text += str(table)
+
+        await call.message.edit_text(text=f'{dialogs.RU_ru['scheduler']['notNone']}```{text}```',
+                                     reply_markup=keyboard, parse_mode='MARKDOWN')
 
 
 @admin_router.callback_query(F.data == 'edit_scheduler')
@@ -956,19 +974,34 @@ async def scheduler_call(call: CallbackQuery):
         await call.message.edit_text(dialogs.RU_ru['scheduler']['None'], reply_markup=button_markup)
     else:
         keyboard = create_schedulers_keyboard()
-        text = ''
-        data = await get_jobs()
-        count = 1
-        for items in data:
-            job_ids, time = items
-            if ':' in time:
-                hour, minute = time.split(':')
-            else:
-                hour, minute = time.split('.')
-            text += f'{job_ids} - {hour}:{minute}\n\n'
-            count += 1
+        data = db.query(query="SELECT * FROM scheduled_jobs", fetch='fetchall')
 
-        await call.message.edit_text(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
+        text = f'{dialogs.RU_ru['navigation']['scheduler']}\n'
+        row_names = {}
+        for item in data:
+            key = item[0][:-12]
+            time = item[1]
+            if key not in row_names:
+                row_names[key] = []
+            row_names[key].append(time)
+
+        max_times = max(len(times) for times in row_names.values())
+
+        row_names_list = []
+        for key, times in row_names.items():
+            times += ['-'] * (max_times - len(times))
+            row_names_list.append([key] + times)
+
+        column_names = ['Задача'] + list(range(1, max_times + 1))
+
+        table = PrettyTable()
+        table.field_names = column_names
+        table.add_rows(row_names_list)
+        table.sortby = "Задача"
+        text += str(table)
+
+        await call.message.edit_text(text=f'{dialogs.RU_ru['scheduler']['notNone']}```{text}```',
+                                     reply_markup=keyboard, parse_mode='MARKDOWN')
 
 
 @admin_router.callback_query(F.data == 'delete_scheduler')
@@ -996,17 +1029,34 @@ async def scheduler_back_call(call: CallbackQuery):
         await call.message.edit_text(dialogs.RU_ru['scheduler']['None'], reply_markup=button_markup)
     else:
         keyboard = create_schedulers_keyboard()
-        text = ''
-        data = await get_jobs()
-        count = 1
-        for items in data:
-            job_ids, time = items
-            job_id = job_ids.removesuffix(f'_{count}')
-            hour, minute = time.split(':')
-            text += f'{job_id} - {hour}:{minute}\n\n'
-            count += 1
+        data = db.query(query="SELECT * FROM scheduled_jobs", fetch='fetchall')
 
-        await call.message.edit_text(f'{dialogs.RU_ru['scheduler']['notNone']}\n\n{text}', reply_markup=keyboard)
+        text = f'{dialogs.RU_ru['navigation']['scheduler']}\n'
+        row_names = {}
+        for item in data:
+            key = item[0][:-12]
+            time = item[1]
+            if key not in row_names:
+                row_names[key] = []
+            row_names[key].append(time)
+
+        max_times = max(len(times) for times in row_names.values())
+
+        row_names_list = []
+        for key, times in row_names.items():
+            times += ['-'] * (max_times - len(times))
+            row_names_list.append([key] + times)
+
+        column_names = ['Задача'] + list(range(1, max_times + 1))
+
+        table = PrettyTable()
+        table.field_names = column_names
+        table.add_rows(row_names_list)
+        table.sortby = "Задача"
+        text += str(table)
+
+        await call.message.edit_text(text=f'{dialogs.RU_ru['scheduler']['notNone']}```{text}```',
+                                     reply_markup=keyboard, parse_mode='MARKDOWN')
 
 
 @admin_router.callback_query(F.data == 'scheduler1_back')

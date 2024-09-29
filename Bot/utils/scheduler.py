@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+import dialogs
 from API_SCRIPTS.Facebook_API import reports_which_is_active
 from API_SCRIPTS.GetCourse_API import getcourse_report
 from API_SCRIPTS.eWebinar_API import get_all_registrants
@@ -47,70 +48,125 @@ async def add_job(job_id, time):
         pass
 
 
+
 async def facebook_reports_job(job_id):
     try:
         await reports_which_is_active()
-        scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
 
-        record = {'Facebook': f'Последнее обновление <b>{datetime.now().strftime("%m/%d/%Y - %H:%M:%S")}</b>'}
+        path = os.path.join(bot_temp_path, 'last_update.json')
 
-        if os.path.exists(path):
+        try:
             with open(path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
-        else:
+        except:
             data = {}
-
-        for key, value in record.items():
-            data[key] = value
+        for key, value in dialogs.RU_ru['last_update_records']['success'].items():
+            if key == 'Facebook':
+                data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
 
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
-    except Exception as e:
-        scheduler_logger.error(f"Error executing job {job_id}: {e}")
+
+        scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
+
+    except Exception as _ex:
+        scheduler_logger.error(f"Error executing job {job_id}: {_ex}")
+        try:
+            path = os.path.join(bot_temp_path, 'last_update.json')
+
+            try:
+                with open(path, 'r', encoding='utf-8') as file:
+                    data = json.load(file)
+            except:
+                data = {}
+            for key, value in dialogs.RU_ru['last_update_records']['failed'].items():
+                if key == 'Facebook':
+                    data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+            with open(path, 'w', encoding='utf-8') as file:
+                json.dump(data, file, ensure_ascii=False, indent=4)
+        except Exception as _ex:
+            scheduler_logger.critical(f'Error opening last_update.json: {_ex}')
 
 
 async def ewebinar_reports_job(job_id):
     try:
         await get_all_registrants()
         scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
+        path = os.path.join(bot_temp_path, 'last_update.json')
 
-        record = {'eWebinar': f'Последнее обновление <b>{datetime.now().strftime("%m/%d/%Y - %H:%M:%S")}</b>'}
-
-        if os.path.exists(path):
+        try:
             with open(path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
-        else:
+        except:
             data = {}
-
-        for key, value in record.items():
-            data[key] = value
+        for key, value in dialogs.RU_ru['last_update_records']['success'].items():
+            if key == 'eWebinar':
+                data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
 
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
-    except Exception as e:
-        scheduler_logger.error(f"Error executing job {job_id}: {e}")
+
+        scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
+
+    except Exception as _ex:
+        scheduler_logger.error(f"Error executing job {job_id}: {_ex}")
+        try:
+            path = os.path.join(bot_temp_path, 'last_update.json')
+
+            try:
+                with open(path, 'r', encoding='utf-8') as file:
+                    data = json.load(file)
+            except:
+                data = {}
+            for key, value in dialogs.RU_ru['last_update_records']['failed'].items():
+                if key == 'eWebinar':
+                    data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+            with open(path, 'w', encoding='utf-8') as file:
+                json.dump(data, file, ensure_ascii=False, indent=4)
+        except Exception as _ex:
+            scheduler_logger.critical(f'Error opening last_update.json: {_ex}')
 
 
 async def getcourse_reports_job(job_id):
     try:
         await getcourse_report()
-        scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
 
-        record = {'GetCourse': f'Последнее обновление <b>{datetime.now().strftime("%m/%d/%Y - %H:%M:%S")}</b>'}
+        path = os.path.join(bot_temp_path, 'last_update.json')
 
-        if os.path.exists(path):
+        try:
             with open(path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
-        else:
+        except:
             data = {}
-
-        for key, value in record.items():
-            data[key] = value
+        for key, value in dialogs.RU_ru['last_update_records']['success'].items():
+            if key == 'GetCourse':
+                data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
 
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
-    except Exception as e:
-        scheduler_logger.error(f"Error executing job {job_id}: {e}")
+
+        scheduler_logger.info(f"Job executed: {job_id} at {datetime.now()}")
+
+    except Exception as _ex:
+        scheduler_logger.error(f"Error executing job {job_id}: {_ex}")
+        try:
+            path = os.path.join(bot_temp_path, 'last_update.json')
+
+            try:
+                with open(path, 'r', encoding='utf-8') as file:
+                    data = json.load(file)
+            except:
+                data = {}
+            for key, value in dialogs.RU_ru['last_update_records']['failed'].items():
+                if key == 'GetCourse':
+                    data[key] = value.format(datetime.now().strftime("%m/%d/%Y - %H:%M:%S"))
+
+            with open(path, 'w', encoding='utf-8') as file:
+                json.dump(data, file, ensure_ascii=False, indent=4)
+        except Exception as _ex:
+            scheduler_logger.critical(f'Error opening last_update.json: {_ex}')
 
 
 async def get_jobs():
