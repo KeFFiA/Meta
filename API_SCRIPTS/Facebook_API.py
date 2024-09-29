@@ -12,23 +12,39 @@ ssl_context = ssl.create_default_context(cafile=certifi.where())
 
 
 def check_adacc_facebook(token):
-    url = ('https://graph.facebook.com/v20.0/me?'
-           'fields=adaccounts{name, id}'
-           f'&access_token={token}')
+    app_id = '1050769943235820'
+    app_secret = 'da6bf3e17b662edb311aaecd81ab0f90'
+    url = ("https://graph.facebook.com/v20.0/oauth/access_token?grant_type=fb_exchange_token&"
+           f"client_id={app_id}&client_secret={app_secret}&fb_exchange_token={token}")
     try:
-        req = requests.get(url=url)
-        if req.status_code == 200:
-            json_req = req.json()['adaccounts']['data']
-            for i in range(len(json_req)):
-                res = json_req[i]
-                name = res['name']
-                acc_id = res['id']
-                db.query(query="INSERT INTO adaccounts (acc_name, acc_id, api_token) VALUES (%s, %s, %s)",
-                         values=(name, acc_id, token))
-            return 200
-        if req.status_code == 401:
+        response = requests.get(url)
+        if response.status_code == 200:
+            long_token = response.json()['access_token']
+
+            url = ('https://graph.facebook.com/v20.0/me?'
+                   'fields=adaccounts{name, id}'
+                   f'&access_token={long_token}')
+
+            try:
+                req = requests.get(url=url)
+                if req.status_code == 200:
+                    json_req = req.json()['adaccounts']['data']
+                    for i in range(len(json_req)):
+                        res = json_req[i]
+                        name = res['name']
+                        acc_id = res['id']
+                        db.query(query="INSERT INTO adaccounts (acc_name, acc_id, api_token) VALUES (%s, %s, %s)",
+                                 values=(name, acc_id, token))
+                    return 200
+                if req.status_code == 401:
+                    return 401
+                if req.status_code != (200 or 401):
+                    return 'BAD'
+            except:
+                return 'BAD'
+        if response.status_code == 401:
             return 401
-        if req.status_code != (200 or 401):
+        if response.status_code != (200 or 401):
             return 'BAD'
     except:
         return 'BAD'
