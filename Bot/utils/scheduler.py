@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-import Bot.dialogs
+from Bot import dialogs
 from API_SCRIPTS.Facebook_API import reports_which_is_active
 from API_SCRIPTS.GetCourse_API import getcourse_report
 from API_SCRIPTS.eWebinar_API import get_all_registrants

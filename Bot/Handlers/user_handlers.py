@@ -20,7 +20,7 @@ from Bot.utils.States import WhiteList
 from Database.database import db
 from Bot.bot_keyboards.inline_keyboards import create_fast_report_which_keyboard, create_tokens_2_help_keyboard
 from path import bot_temp_path
-from utils.logging_settings import user_handlers_logger
+from Bot.utils.logging_settings import user_handlers_logger
 
 user_router = Router()
 
